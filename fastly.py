@@ -58,7 +58,7 @@ class FastlyConnection(object):
 	def login(self, user, password):
 		body = self._formdata({
 			"user": user,
-        	"password": password,
+			"password": password,
 		}, ["user", "password"])
 		content = self._fetch("/login", method="POST", body=body)
 		self._fully_authed = True
@@ -827,7 +827,7 @@ class FastlyHealthCheck(FastlyObject, IServiceVersionObject):
 
 class FastlyDomain(FastlyObject, IServiceVersionObject):
 	FIELDS = [
-    	"name",
+		"name",
 		"comment",
 		"service_id",
 		"version",
@@ -866,7 +866,7 @@ class FastlyDirector(FastlyObject, IServiceVersionObject, IDateStampedObject):
 
 class FastlyOrigin(FastlyObject, IServiceVersionObject):
 	FIELDS = [
-    	"name",
+		"name",
 		"comment",
 		"service_id",
 		"version",
@@ -875,11 +875,11 @@ class FastlyOrigin(FastlyObject, IServiceVersionObject):
 
 class FastlyVCL(FastlyObject, IServiceVersionObject):
 	FIELDS = [
-    	"name",
+		"name",
 		"service_id",
 		"version",
 		"generation",
-        "md5",
+		"md5",
 		"content",
 		"main",
 	]
@@ -887,7 +887,7 @@ class FastlyVCL(FastlyObject, IServiceVersionObject):
 
 class FastlySyslog(FastlyObject, IServiceVersionObject, IDateStampedObject):
 	FIELDS = [
-    	"name",
+		"name",
 		"service_id",
 		"version",
 		"address",
