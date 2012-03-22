@@ -739,11 +739,15 @@ class FastlyService(FastlyObject):
 
 	@property
 	def versions(self):
-		return map(lambda x: FastlyServiceVersion(self._conn, x), self._data.get("versions", []))
+		return dict([ (v.number, v) for v in self.list_service_versions(self.id) ])
 
 	@property
 	def active_version(self):
-		return self._conn.get_service_version(self.id, self.version)
+		for version in self.versions.values():
+			if version.active:
+				return version
+		return None
+
 
 class IServiceObject(object):
 	@property
@@ -765,6 +769,42 @@ class FastlyServiceVersion(FastlyObject, IServiceObject, IDateStampedObject):
 		"deleted_at",
 		"deployed",
 	]
+
+	@property
+	def settings(self):
+		dct = {}
+		result = self._conn.get_service_version_settings(self.service_id)
+		if result:
+			dct = result.settings
+		return dct
+
+	@property
+	def backends(self):
+		return dict([ (b.name, b) for b in self._conn.list_backends(self.service_id, int(self.number))])
+
+	@property
+	def healthchecks(self):
+		return dict([ (h.name, h) for h in self._conn.list_healthchecks(self.service_id, int(self.number))])
+
+	@property
+	def domains(self):
+		return dict([ (d.name, d) for d in self._conn.list_domains(self.service_id, int(self.number))])
+
+	@property
+	def directors(self):
+		return dict([ (d.name, d) for d in self._conn.list_directors(self.service_id, int(self.number))])
+
+	@property
+	def origins(self):
+		return dict([ (o.name, o) for o in self._conn.list_origins(self.service_id, int(self.number))])
+
+	@property
+	def syslogs(self):
+		return dict([ (s.name, s) for s in self._conn.list_syslogs(self.service_id, int(self.number))])
+
+	@property
+	def vcls(self):
+		return dict([ (v.name, v) for v in self._conn.list_vcls(self.service_id, int(self.number))])
 
 
 class IServiceVersionObject(IServiceObject):
