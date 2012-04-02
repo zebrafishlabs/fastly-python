@@ -639,7 +639,7 @@ class FastlyObject(object):
 		return repr(self._data)
 
 	def _parse_date(self, _date):
-		return datetime.strptime("%Y-%m-%dT%H:%M:%S+00:00")
+		return datetime.strptime(_date, "%Y-%m-%dT%H:%M:%S+00:00")
 
 
 class IDateStampedObject(object):
