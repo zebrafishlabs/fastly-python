@@ -504,7 +504,7 @@ class FastlyConnection(object):
 
 	def list_syslogs(self, service_id, version_number):
 		content = self._fetch("/service/%s/version/%d/syslog" % (service_id, version_number))
-		return map(lambda x: FastlyHealthCheck(self, x), content)
+		return map(lambda x: FastlySyslog(self, x), content)
 
 
 	def create_syslog(self, service_id, version_number, name, address=None, ipv4=None, hostname=None, port=514, _format=None):
