@@ -445,13 +445,13 @@ class FastlyConnection(object):
 		return content.get("content", None)
 
 
-	def get_generated_vcl(self, service_id, version_number, name, include_content=True):
-		content = self._fetch("/service/%s/version/%d/generated_vcl/%s?include_content=%d" % (service_id, version_number, name, int(include_content)))
+	def get_generated_vcl(self, service_id, version_number, include_content=True):
+		content = self._fetch("/service/%s/version/%d/generated_vcl?include_content=%d" % (service_id, version_number, int(include_content)))
 		return FastlyVCL(self, content)
 
 
-	def get_generated_vcl_html(self, service_id, version_number, name):
-		content = self._fetch("/service/%s/version/%d/generated_vcl/%s/content" % (service_id, version_number, name))
+	def get_generated_vcl_html(self, service_id, version_number):
+		content = self._fetch("/service/%s/version/%d/generated_vcl/content" % (service_id, version_number))
 		return content.get("content", None)
 
 
