@@ -1,0 +1,7 @@
+README
+setup.py
+fastly_python.egg-info/PKG-INFO
+fastly_python.egg-info/SOURCES.txt
+fastly_python.egg-info/dependency_links.txt
+fastly_python.egg-info/top_level.txt
+tests/__init__.py
