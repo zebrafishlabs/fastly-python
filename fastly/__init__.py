@@ -503,6 +503,118 @@ class FastlyConnection(object):
 		return self._status(content)
 
 
+	def list_conditions(self, service_id, version_number):
+		content = self._fetch("/service/%s/version/%d/condition" % (service_id, version_number))
+		return map(lambda x: FastlyCondition(self, x), content)
+
+
+	def create_condition(self, service_id, version_number, name, _type, statement, priority="10", comment=None):
+		body = self._formdata({
+			"name": name,
+			"type": _type,
+			"statement": statement,
+			"priority": priority,
+			"comment": comment,
+		}, FastlyCondition.FIELDS)
+		content = self._fetch("/service/%s/version/%d/condition" % (service_id, version_number), method="POST", body=body)
+		return FastlyCondition(self, content)
+
+
+	def get_condition(self, service_id, version_number, name):
+		content = self._fetch("/service/%s/version/%d/condition/%s" % (service_id, version_number, name))
+		return FastlyCondition(self, content)
+
+
+	def update_condition(self, service_id, version_number, name_key, **kwargs):
+		body = self._formdata(kwargs, FastlyCondition.FIELDS)
+		content = self._fetch("/service/%s/version/%d/condition/%s" % (service_id, version_number, name_key), method="PUT", body=body)
+		return FastlyCondition(self, content)
+
+
+	def delete_condition(self, service_id, version_number, name):
+		content = self._fetch("/service/%s/version/%d/condition/%s" % (service_id, version_number, name), method="DELETE")
+		return self._status(content)
+
+
+	def list_headers(self, service_id, version_number):
+		content = self._fetch("/service/%s/version/%d/header" % (service_id, version_number))
+		return map(lambda x: FastlyHeader(self, x), content)
+
+
+	def create_header(self, service_id, version_number, name, destination, source, _type=FastlyHeaderType.RESPONSE, action=FastlyHeaderAction.SET, regex="", substitution="", ignore_if_set="", priority="10", response_condition="", cache_condition="", request_condition=""):
+		body = self._formdata({
+			"name": name,
+			"dst": destination,
+			"src": source,
+			"type": _type,
+			"action": action,
+			"regex": regex,
+			"substitution": substitution,
+			"ignore_if_set": ignore_if_set,
+			"priority": priority,
+			"response_condition": response_condition,
+			"request_condition": request_condition,
+			"cache_condition": cache_condition,
+		}, FastlyHeader.FIELDS)
+		content = self._fetch("/service/%s/version/%d/header" % (service_id, version_number), method="POST", body=body)
+		return FastlyHeader(self, content)
+
+
+	def get_header(self, service_id, version_number, name):
+		content = self._fetch("/service/%s/version/%d/header/%s" % (service_id, version_number, name))
+		return FastlyHeader(self, content)
+
+
+	def update_header(self, service_id, version_number, name_key, **kwargs):
+		body = self._formdata(kwargs, FastlyHeader.FIELDS)
+		content = self._fetch("/service/%s/version/%d/header/%s" % (service_id, version_number, name_key), method="PUT", body=body)
+		return FastlyHeader(self, content)
+
+
+	def delete_header(self, service_id, version_number, name):
+		content = self._fetch("/service/%s/version/%d/header/%s" % (service_id, version_number, name), method="DELETE")
+		return self._status(content)
+
+
+	def list_response_objects(self, service_id, version_number):
+		content = self._fetch("/service/%s/version/%d/response_object" % (service_id, version_number))
+		return map(lambda x: FastlyResponseObject(self, x), content)
+
+
+	def create_response_object(self, service_id, version_number, name, status="200", response="OK", content="", response_condition="", cache_condition=""):
+		body = self._formdata({
+			"name": name,
+			"status": status,
+			"response": response,
+			"content": content,
+			"response_condition": response_condition,
+			"cache_condition": cache_condition,
+		}, FastlyResponseObject.FIELDS)
+		content = self._fetch("/service/%s/version/%d/response_object" % (service_id, version_number), method="POST", body=body)
+		return FastlyResponseObject(self, content)
+
+
+	def get_response_object(self, service_id, version_number, name):
+		content = self._fetch("/service/%s/version/%d/response_object/%s" % (service_id, version_number, name))
+		return FastlyResponseObject(self, content)
+
+
+	def update_response_object(self, service_id, version_number, name_key, **kwargs):
+		body = self._formdata(kwargs, FastlyResponseObject.FIELDS)
+		content = self._fetch("/service/%s/version/%d/response_object/%s" % (service_id, version_number, name_key), method="PUT", body=body)
+		return FastlyResponseObject(self, content)
+
+
+	def delete_response_object(self, service_id, version_number, name):
+		content = self._fetch("/service/%s/version/%d/response_object/%s" % (service_id, version_number, name), method="DELETE")
+		return self._status(content)
+
+
+	def list_syslogs(self, service_id, version_number):
+		content = self._fetch("/service/%s/version/%d/syslog" % (service_id, version_number))
+		return map(lambda x: FastlySyslog(self, x), content)
+
+
 	def list_syslogs(self, service_id, version_number):
 		content = self._fetch("/service/%s/version/%d/syslog" % (service_id, version_number))
 		return map(lambda x: FastlySyslog(self, x), content)
@@ -940,6 +1052,71 @@ class FastlySyslog(FastlyObject, IServiceVersionObject, IDateStampedObject):
 		"updated",
 		"deleted",
 	]
+
+
+class FastlyResponseObject(FastlyObject, IServiceVersionObject):
+	FIELDS = [
+		"name",
+		"service_id",
+		"version",
+		"status",
+		"response",
+		"content",
+		"cache_condition",
+		"response_condition",
+	]
+
+
+class FastlyHeader(FastlyObject, IServiceVersionObject):
+	FIELDS = [
+		"name",
+		"service_id",
+		"version",
+		"dst",
+		"src",
+		"type",
+		"action",
+		"regex",
+		"substitution",
+		"ignore_if_set",
+		"priority",
+		"response_condition",
+		"request_condition",
+		"cache_condition",
+	]
+
+
+class FastlyHeaderType(object):
+	RESPONSE="response"
+	FETCH="fetch"
+	CACHE="cache"
+	REQUEST="request"
+
+
+class FastlyHeaderAction(object):
+	SET="set"
+	APPEND="append"
+	DELETE="delete"
+	REGEX="regex"
+	REGEX_ALL="regex_repeat"
+
+
+class FastlyCondition(FastlyObject, IServiceVersionObject):
+	FIELDS = [
+		"name",
+		"service_id",
+		"version",
+		"type",
+		"statement",
+		"priority",
+	]
+
+
+class FastlyConditionType(object):
+	RESPONSE="RESPONSE"
+	CACHE="CACHE"
+	REQUEST="REQUEST"
+	FETCH="FETCH"
 
 
 def connect(api_key, username=None, password=None):
