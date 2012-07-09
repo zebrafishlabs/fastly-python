@@ -44,28 +44,6 @@ class FastlyRoles(object):
 	SUPERUSER = "superuser"
 
 
-class FastlyHeaderType(object):
-	RESPONSE="response"
-	FETCH="fetch"
-	CACHE="cache"
-	REQUEST="request"
-
-
-class FastlyHeaderAction(object):
-	SET="set"
-	APPEND="append"
-	DELETE="delete"
-	REGEX="regex"
-	REGEX_ALL="regex_repeat"
-
-
-class FastlyConditionType(object):
-	RESPONSE="RESPONSE"
-	CACHE="CACHE"
-	REQUEST="REQUEST"
-	FETCH="FETCH"
-
-
 class FastlyConnection(object):
 	def __init__(self, api_key):
 		self._session = None
@@ -1108,6 +1086,21 @@ class FastlyHeader(FastlyObject, IServiceVersionObject):
 	]
 
 
+class FastlyHeaderType(object):
+	RESPONSE="response"
+	FETCH="fetch"
+	CACHE="cache"
+	REQUEST="request"
+
+
+class FastlyHeaderAction(object):
+	SET="set"
+	APPEND="append"
+	DELETE="delete"
+	REGEX="regex"
+	REGEX_ALL="regex_repeat"
+
+
 class FastlyCondition(FastlyObject, IServiceVersionObject):
 	FIELDS = [
 		"name",
@@ -1117,6 +1110,13 @@ class FastlyCondition(FastlyObject, IServiceVersionObject):
 		"statement",
 		"priority",
 	]
+
+
+class FastlyConditionType(object):
+	RESPONSE="RESPONSE"
+	CACHE="CACHE"
+	REQUEST="REQUEST"
+	FETCH="FETCH"
 
 
 def connect(api_key, username=None, password=None):
