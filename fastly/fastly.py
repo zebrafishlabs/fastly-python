@@ -130,10 +130,11 @@ class FastlyConnection(object):
 		return self._status(content)
 
 
-	def create_service(self, customer_id, name, comment=None):
+	def create_service(self, customer_id, name, stat_type="all", comment=None):
 		body = self._formdata({
 			"customer_id": customer_id,
 			"name": name,
+			"type": stat_type,
 			"comment": comment,
 		}, FastlyService.FIELDS)
 		content = self._fetch("/service", method="POST", body=body)
