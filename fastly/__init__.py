@@ -603,13 +603,13 @@ class FastlyConnection(object):
 		return map(lambda x: FastlyResponseObject(self, x), content)
 
 
-	def create_response_object(self, service_id, version_number, name, status="200", response="OK", content="", response_condition=None, cache_condition=None):
+	def create_response_object(self, service_id, version_number, name, status="200", response="OK", content="", request_condition=None, cache_condition=None):
 		body = self._formdata({
 			"name": name,
 			"status": status,
 			"response": response,
 			"content": content,
-			"response_condition": response_condition,
+			"request_condition": request_condition,
 			"cache_condition": cache_condition,
 		}, FastlyResponseObject.FIELDS)
 		content = self._fetch("/service/%s/version/%d/response_object" % (service_id, version_number), method="POST", body=body)
@@ -1085,7 +1085,7 @@ class FastlyResponseObject(FastlyObject, IServiceVersionObject):
 		"response",
 		"content",
 		"cache_condition",
-		"response_condition",
+		"request_condition",
 	]
 
 
