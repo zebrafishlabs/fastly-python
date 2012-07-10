@@ -563,7 +563,7 @@ class FastlyConnection(object):
 		return map(lambda x: FastlyHeader(self, x), content)
 
 
-	def create_header(self, service_id, version_number, name, destination, source, _type=FastlyHeaderType.RESPONSE, action=FastlyHeaderAction.SET, regex=None, substitution=None, ignore_if_set=None, priority="10", response_condition=None, cache_condition=None, request_condition=None):
+	def create_header(self, service_id, version_number, name, destination, source, _type=FastlyHeaderType.RESPONSE, action=FastlyHeaderAction.SET, regex="", substitution="", ignore_if_set="", priority="10", response_condition="", cache_condition="", request_condition=""):
 		body = self._formdata({
 			"name": name,
 			"dst": destination,
@@ -603,7 +603,7 @@ class FastlyConnection(object):
 		return map(lambda x: FastlyResponseObject(self, x), content)
 
 
-	def create_response_object(self, service_id, version_number, name, status="200", response="OK", content="", response_condition=None, cache_condition=None):
+	def create_response_object(self, service_id, version_number, name, status="200", response="OK", content="", response_condition="", cache_condition=""):
 		body = self._formdata({
 			"name": name,
 			"status": status,
