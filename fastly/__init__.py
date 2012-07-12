@@ -219,7 +219,6 @@ class FastlyConnection(object):
 
 
 	def activate_service_version(self, service_id, version_number):
-		self.validate_service_version(service_id, version_number)
 		content = self._fetch("/service/%s/version/%d/activate" % (service_id, version_number), method="PUT")
 		return FastlyServiceVersion(self, content)
 
@@ -494,7 +493,7 @@ class FastlyConnection(object):
 		return map(lambda x: FastlyHealthCheck(self, x), content)
 
 
-	def create_healthcheck(self, service_id, version_number, name, host, method="HEAD", path="/", http_version="1.1", timeout=1, window=5, threshold=3):
+	def create_healthcheck(self, service_id, version_number, name, host, method="HEAD", path="/", http_version="1.1", timeout=1000, window=5, threshold=3):
 		body = self._formdata({
 			"name": name,
 			"host": host,
