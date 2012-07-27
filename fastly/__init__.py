@@ -44,7 +44,7 @@ class FastlyRoles(object):
 	SUPERUSER = "superuser"
 
 
-class FastlyCacheSettingAction(object):
+class FastlyCacheSettingsAction(object):
 	CACHE = "cache"
 	PASS = "pass"
 	RESTART = "restart"
@@ -72,6 +72,26 @@ class FastlyHeaderType(object):
 	REQUEST="request"
 
 
+class FastlyRequestSettingsAction(object):
+	LOOKUP="lookup"
+	PASS="pass"
+
+
+class FastlyForwardedForAction(object):
+	CLEAR="clear"
+	LEAVE="leave"
+	APPEND="append"
+	APPEND_ALL="append_all"
+	OVERWRITE="overwrite"
+
+
+class FastlyStatsType(object):
+	ALL="all"
+	DAILY="daily"
+	HOURLY="hourly"
+	MINUTELY="minutely"
+
+
 class FastlyConnection(object):
 	def __init__(self, api_key):
 		self._session = None
@@ -91,159 +111,6 @@ class FastlyConnection(object):
 		content = self._fetch("/login", method="POST", body=body)
 		self._fully_authed = True
 		return FastlySession(self, content)
-
-
-	def get_current_user(self):
-		content = self._fetch("/current_user")
-		return FastlyUser(self, content)
-
-
-	def list_users(self):
-		content = self._fetch("/user")
-		return map(lambda x: FastlyUser(self, x), content)
-
-
-	def get_user(self, user_id):
-		content = self._fetch("/user/%s" % user_id)
-		return FastlyUser(self, content)
-
-
-	def create_user(self, customer_id, name, login, password, role=FastlyRoles.USER, require_new_password=True):
-		body = self._formdata({
-			"customer_id": customer_id,
-			"name": name,
-			"login": login,
-			"password": password,
-			"role": role,
-			"require_new_password": require_new_password,
-		}, FastlyUser.FIELDS)
-		content = self._fetch("/user", method="POST", body=body)
-		return FastlyUser(self, content)
-
-
-	def update_user(self, user_id, **kwargs):
-		body = self._formdata(kwargs, FastlyUser.FIELDS)
-		content = self._fetch("/user/%s" % user_id, method="PUT", body=body)
-		return FastlyUser(self, content)
-
-
-	def delete_user(self, user_id):
-		content = self._fetch("/user/%s" % user_id, method="DELETE")
-		return self._status(content)
-
-
-	def create_service(self, customer_id, name, stat_type="all", comment=None):
-		body = self._formdata({
-			"customer_id": customer_id,
-			"name": name,
-			"type": stat_type,
-			"comment": comment,
-		}, FastlyService.FIELDS)
-		content = self._fetch("/service", method="POST", body=body)
-		return FastlyService(self, content)
-		
-
-	def list_services(self):
-		content = self._fetch("/service")
-		return map(lambda x: FastlyService(self, x), content)
-
-
-	def get_service(self, service_id):
-		content = self._fetch("/service/%s" % service_id)
-		return FastlyService(self, content)
-
-
-	def get_service_by_name(self, service_name):
-		content = self._fetch("/service/search?name=%s" % service_name)
-		return FastlyService(self, content)
-
-
-	def update_service(self, service_id, **kwargs):
-		body = self._formdata(kwargs, FastlyService.FIELDS)
-		content = self._fetch("/service/%s" % service_id, method="PUT", body=body)
-		return FastlyService(self, content)
-
-
-	def delete_service(self, service_id):
-		content = self._fetch("/service/%s" % service_id, method="DELETE")
-		return self._status(content)
-
-
-	def get_service_stats(self, service_id, stat_type="all"):
-		content = self._fetch("/service/%s/stats/%s" % (service_id, stat_type))
-		# TODO: This doesn't seem to be working.
-
-
-	def create_service_version(self, service_id, comment=None):
-		body = self._formdata({
-			"service_id": service_id,
-			"comment": comment,
-		}, FastlyServiceVersion.FIELDS)
-		content = self._fetch("/service/%s/version" % service_id, method="POST", body=body)
-		return FastlyServiceVersion(self, content)
-		
-
-	def list_service_versions(self, service_id):
-		content = self._fetch("/service/%s/version"% service_id)
-		return map(lambda x: FastlyServiceVersion(self, x), content)
-
-
-	def get_service_version(self, service_id, version_number):
-		content = self._fetch("/service/%s/version/%d" % (service_id, version_number))
-		return FastlyServiceVersion(self, content)
-
-
-	def clone_service_version(self, service_id, version_number):
-		content = self._fetch("/service/%s/version/%d/clone" % (service_id, version_number), method="PUT")
-		return FastlyServiceVersion(self, content)
-
-
-	def activate_service_version(self, service_id, version_number):
-		content = self._fetch("/service/%s/version/%d/activate" % (service_id, version_number), method="PUT")
-		return FastlyServiceVersion(self, content)
-
-
-	def deactivate_service_version(self, service_id, version_number):
-		content = self._fetch("/service/%s/version/%d/deactivate" % (service_id, version_number), method="PUT")
-		return FastlyServiceVersion(self, content)
-
-
-	def validate_service_version(self, service_id, version_number):
-		content = self._fetch("/service/%s/version/%d/validate" % (service_id, version_number))
-		return self._status(content)
-
-
-	def get_service_version_settings(self, service_id, version_number):
-		content = self._fetch("/service/%s/version/%d/settings" % (service_id, version_number))
-		return FastlyServiceVersionSettings(self, content)
-
-
-	def update_service_version_settings(self, service_id, version_number, settings={}):
-		body = urllib.urlencode(settings)
-		content = self._fetch("/service/%s/version/%d/settings" % (service_id, version_number), method="PUT", body=body)
-		return FastlyServiceVersionSettings(self, content)
-
-
-	# TODO: Is this broken?
-	def delete_service_version(self, service_id, version_number):
-		content = self._fetch("/service/%s/version/%d" % (service_id, version_number), method="DELETE")
-		return self._status(content)
-
-
-	def purge_url(self, url):
-		content = self._fetch("/purge/%s" % url, method="POST") 
-		return self._status(content)
-
-
-	def purge_key(self, service_id, key):
-		content = self._fetch("/service/%s/purge/%s" % (service_id, key), method="POST")
-		return self._status(content)
-
-
-	# TODO: Is this broken?
-	def purge_all(self, service_id):
-		content = self._fetch("/service/%s/purge_all" % service_id, method="POST")
-		return self._status(content)
 
 
 	def list_backends(self, service_id, version_number):
@@ -320,10 +187,10 @@ class FastlyConnection(object):
 	def list_cache_settings(self, service_id, version_number):
 		"""Get a list of all cache settings for a particular service and version."""
 		content = self._fetch("/service/%s/version/%d/cache_settings" % (service_id, version_number))
-		return map(lambda x: FastlyCacheSetting(self, x), content)
+		return map(lambda x: FastlyCacheSettings(self, x), content)
 
 
-	def create_cache_setting(self, 
+	def create_cache_settings(self, 
 		service_id, 
 		version_number, 
 		name,
@@ -338,25 +205,25 @@ class FastlyConnection(object):
 			"ttl": ttl,
 			"stale_ttl": stale_ttl,
 			"cache_condition": cache_condition,
-		}, FastlyCacheSetting.FIELDS)
+		}, FastlyCacheSettings.FIELDS)
 		content = self._fetch("/service/%s/version/%d/cache_settings" % (service_id, version_number), method="POST", body=body)
-		return FastlyCacheSetting(self, content)
+		return FastlyCacheSettings(self, content)
 
 
-	def get_cache_setting(self, service_id, version_number, name):
+	def get_cache_settings(self, service_id, version_number, name):
 		"""Get a specific cache settings object."""
 		content = self._fetch("/service/%s/version/%d/cache_settings/%s" % (service_id, version_number, name))
-		return FastlyCacheSetting(self, content)
+		return FastlyCacheSettings(self, content)
 
 
-	def update_cache_setting(self, service_id, version_number, name_key, **kwargs):
+	def update_cache_settings(self, service_id, version_number, name_key, **kwargs):
 		"""Update a specific cache settings object."""
-		body = self._formdata(kwargs, FastlyCacheSetting.FIELDS)
+		body = self._formdata(kwargs, FastlyCacheSettings.FIELDS)
 		content = self._fetch("/service/%s/version/%d/cache_settings/%s" % (service_id, version_number, name_key), method="PUT", body=body)
-		return FastlyCacheSetting(self, content)
+		return FastlyCacheSettings(self, content)
 
 
-	def delete_cache_setting(self, service_id, version_number, name):
+	def delete_cache_settings(self, service_id, version_number, name):
 		"""Delete a specific cache settings object."""
 		content = self._fetch("/service/%s/version/%d/cache_settings/%s" % (service_id, version_number, name), method="DELETE")
 		return self._status(content)
@@ -436,7 +303,7 @@ class FastlyConnection(object):
 		return content
 
 
-	def get_customer_users(self, customer_id):
+	def list_customer_users(self, customer_id):
 		"""List all users from a specified customer id."""
 		content = self._fetch("/customer/users/%s" % customer_id)
 		return map(lambda x: FastlyUser(self, x), content)
@@ -538,115 +405,49 @@ class FastlyConnection(object):
 
 
 	def get_domain(self, service_id, version_number, name):
+		"""Get the domain for a particular service and version."""
 		content = self._fetch("/service/%s/version/%d/domain/%s" % (service_id, version_number, name))
 		return FastlyDomain(self, content)
 
 
 	def update_domain(self, service_id, version_number, name_key, **kwargs):
+		"""Update the domain for a particular service and version."""
 		body = self._formdata(kwargs, FastlyDomain.FIELDS)
 		content = self._fetch("/service/%s/version/%d/domain/%s" % (service_id, version_number, name_key), method="PUT", body=body)
 		return FastlyDomain(self, content)
 
 
 	def delete_domain(self, service_id, version_number, name):
+		"""Delete the domain for a particular service and version."""
 		content = self._fetch("/service/%s/version/%d/domain/%s" % (service_id, version_number, name), method="DELETE")
-		return self._status(content)
+		return self._status(self, content)
 
 
 	def check_domain(self, service_id, version_number, name):
+		"""Checks the status of a domain's DNS record. Returns an array of 3 items. The first is the details for the domain. The second is the current CNAME of the domain. The third is a boolean indicating whether or not it has been properly setup to use Fastly."""
 		content = self._fetch("/service/%s/version/%d/domain/%s/check" % (service_id, version_number, name))
 		return FastlyDomainCheck(self, content)
 
 
-	def list_vcls(self, service_id, version_number):
-		content = self._fetch("/service/%s/version/%d/vcl" % (service_id, version_number))
-		return map(lambda x: FastlyVCL(self, x), content)
+	def check_domains(self, service_id, version_number):
+		"""Checks the status of all domain DNS records for a Service Version. Returns an array items in the same format as the single domain /check."""
+		content = self._fetch("/service/%s/version/%d/domain/check_all" % (service_id, version_number))
+		return map(lambda x: FastlyDomainCheck(self, x), content)
 
 
-	def create_vcl(self, service_id, version_number, name, content, comment=None):
-		body = self._formdata({
-			"name": name,
-			"content": content,
-			"comment": comment,
-
-		}, FastlyOrigin.FIELDS)
-		content = self._fetch("/service/%s/version/%d/vcl" % (service_id, version_number), method="POST", body=body)
-		return FastlyVCL(self, content)
-
-
-	def get_vcl(self, service_id, version_number, name, include_content=True):
-		content = self._fetch("/service/%s/version/%d/vcl/%s?include_content=%d" % (service_id, version_number, name, int(include_content)))
-		return FastlyVCL(self, content)
-
-
-	def get_vcl_html(self, service_id, version_number, name):
-		content = self._fetch("/service/%s/version/%d/vcl/%s/content" % (service_id, version_number, name))
-		return content.get("content", None)
-
-
-	def get_generated_vcl(self, service_id, version_number, include_content=True):
-		content = self._fetch("/service/%s/version/%d/generated_vcl?include_content=%d" % (service_id, version_number, int(include_content)))
-		return FastlyVCL(self, content)
-
-
-	def get_generated_vcl_html(self, service_id, version_number):
-		content = self._fetch("/service/%s/version/%d/generated_vcl/content" % (service_id, version_number))
-		return content.get("content", None)
-
-
-	def update_vcl(self, service_id, version_number, name_key, **kwargs):
-		body = self._formdata(kwargs, FastlyVCL.FIELDS)
-		content = self._fetch("/service/%s/version/%d/vcl/%s" % (service_id, version_number, name_key), method="PUT", body=body)
-		return FastlyVCL(self, content)
-
-
-	def delete_vcl(self, service_id, version_number, name):
-		content = self._fetch("/service/%s/version/%d/vcl/%s" % (service_id, version_number, name), method="DELETE")
-		return self._status(content)
-
-
-	def list_healthchecks(self, service_id, version_number):
-		content = self._fetch("/service/%s/version/%d/healthcheck" % (service_id, version_number))
-		return map(lambda x: FastlyHealthCheck(self, x), content)
-
-
-	def create_healthcheck(self, service_id, version_number, name, host, method="HEAD", path="/", http_version="1.1", timeout=1000, window=5, threshold=3):
-		body = self._formdata({
-			"name": name,
-			"host": host,
-			"method": method,
-			"path": path,
-			"http_version": http_version,
-			"timeout": timeout,
-			"window": window,
-			"threshold": threshold,
-		}, FastlyHealthCheck.FIELDS)
-		content = self._fetch("/service/%s/version/%d/healthcheck" % (service_id, version_number), method="POST", body=body)
-		return FastlyHealthCheck(self, content)
-
-
-	def get_healthcheck(self, service_id, version_number, name):
-		content = self._fetch("/service/%s/version/%d/healthcheck/%s" % (service_id, version_number, name))
-		return FastlyHealthCheck(self, content)
-
-
-	def update_healthcheck(self, service_id, version_number, name_key, **kwargs):
-		body = self._formdata(kwargs, FastlyHealthCheck.FIELDS)
-		content = self._fetch("/service/%s/version/%d/healthcheck/%s" % (service_id, version_number, name_key), method="PUT", body=body)
-		return FastlyHealthCheck(self, content)
-
-
-	def delete_healthcheck(self, service_id, version_number, name):
-		content = self._fetch("/service/%s/version/%d/healthcheck/%s" % (service_id, version_number, name), method="DELETE")
-		return self._status(content)
+	def get_event_log(self, object_id):
+		"""Get the specified event log."""
+		content = self._fetch("/event_log/%s" % object_id, method="GET")
+		return FastlyEventLog(self, content)
 
 
 	def list_headers(self, service_id, version_number):
+		"""Retrieves all Header objects for a particular Version of a Service."""
 		content = self._fetch("/service/%s/version/%d/header" % (service_id, version_number))
 		return map(lambda x: FastlyHeader(self, x), content)
 
 
-	def create_header(self, service_id, version_number, name, destination, source, _type=FastlyHeaderType.RESPONSE, action=FastlyHeaderAction.SET, regex=None, substitution=None, ignore_if_set=None, priority="10", response_condition=None, cache_condition=None, request_condition=None):
+	def create_header(self, service_id, version_number, name, destination, source, _type=FastlyHeaderType.RESPONSE, action=FastlyHeaderAction.SET, regex=None, substitution=None, ignore_if_set=None, priority=10, response_condition=None, cache_condition=None, request_condition=None):
 		body = self._formdata({
 			"name": name,
 			"dst": destination,
@@ -661,32 +462,166 @@ class FastlyConnection(object):
 			"request_condition": request_condition,
 			"cache_condition": cache_condition,
 		}, FastlyHeader.FIELDS)
+		"""Creates a new Header object."""
 		content = self._fetch("/service/%s/version/%d/header" % (service_id, version_number), method="POST", body=body)
 		return FastlyHeader(self, content)
 
 
 	def get_header(self, service_id, version_number, name):
+		"""Retrieves a Header object by name."""
 		content = self._fetch("/service/%s/version/%d/header/%s" % (service_id, version_number, name))
 		return FastlyHeader(self, content)
 
 
 	def update_header(self, service_id, version_number, name_key, **kwargs):
+		"""Modifies an existing Header object by name."""
 		body = self._formdata(kwargs, FastlyHeader.FIELDS)
 		content = self._fetch("/service/%s/version/%d/header/%s" % (service_id, version_number, name_key), method="PUT", body=body)
 		return FastlyHeader(self, content)
 
 
 	def delete_header(self, service_id, version_number, name):
+		"""Deletes a Header object by name."""
 		content = self._fetch("/service/%s/version/%d/header/%s" % (service_id, version_number, name), method="DELETE")
 		return self._status(content)
 
 
+	def list_healthchecks(self, service_id, version_number):
+		"""List all of the healthchecks for a particular service and version."""
+		content = self._fetch("/service/%s/version/%d/healthcheck" % (service_id, version_number))
+		return map(lambda x: FastlyHealthCheck(self, x), content)
+
+
+	def create_healthcheck(self,
+		service_id, 
+		version_number,
+		name,
+		host,
+		method="HEAD",
+		path="/",
+		http_version="1.1",
+		timeout=1000,
+		check_interval=5000,
+		expected_response=200,
+		window=5,
+		threshold=3,
+		initial=1):
+		"""Create a healthcheck for a particular service and version."""
+		body = self._formdata({
+			"name": name,
+			"method": method,
+			"host": host,
+			"path": path,
+			"http_version": http_version,
+			"timeout": timeout,
+			"check_interval": check_interval,
+			"expected_response": expected_response,
+			"window": window,
+			"threshold": threshold,
+			"initial": initial,
+		}, FastlyHealthCheck.FIELDS)
+		content = self._fetch("/service/%s/version/%d/healthcheck" % (service_id, version_number), method="POST", body=body)
+		return FastlyHealthCheck(self, content)
+
+
+	def get_healthcheck(self, service_id, version_number, name):
+		"""Get the healthcheck for a particular service and version."""
+		content = self._fetch("/service/%s/version/%d/healthcheck/%s" % (service_id, version_number, name))
+		return FastlyHealthCheck(self, content)
+
+
+	def update_healthcheck(self, service_id, version_number, name_key, **kwargs):
+		"""Update the healthcheck for a particular service and version."""
+		body = self._formdata(kwargs, FastlyHealthCheck.FIELDS)
+		content = self._fetch("/service/%s/version/%d/healthcheck/%s" % (service_id, version_number, name_key), method="PUT", body=body)
+		return FastlyHealthCheck(self, content)
+
+
+	def delete_healthcheck(self, service_id, version_number, name):
+		"""Delete the healthcheck for a particular service and version."""
+		content = self._fetch("/service/%s/version/%d/healthcheck/%s" % (service_id, version_number, name), method="DELETE")
+		return self._status(content)
+
+
+	def	purge_url(self, host, path):
+		"""Purge an individual URL."""
+		content = self._fetch(path, method="PURGE", headers={ "Host": host }) 
+		return FastlyPurge(self, content)
+
+
+	def check_purge_status(self, purge_id):
+		"""Get the status and times of a recently completed purge."""
+		content = self._fetch("/purge?id=%s" % purge_id)
+		return map(lambda x: FastlyPurgeStatus(self, x), content)
+
+
+	def list_request_settings(self, service_id, version_number):
+		"""Returns a list of all Request Settings objects for the given service and version."""
+		content = self._fetch("/service/%s/version/%d/request_settings" % (service_id, version_number))
+		return map(lambda x: FastlyRequestSettings(self, x), content)
+
+
+	def create_request_settings(self,
+		service_id,
+		version_number,
+		name,
+		default_host=None,
+		force_miss=None,
+		force_ssl=None,
+		action=None,
+		bypass_busy_wait=None,
+		max_stale_age=None,
+		hash_keys=None,
+		xff=None,
+		timer_support=None,
+		geo_headers=None,
+		request_condition=None):
+		"""Creates a new Request Settings object."""
+		body = self._formdata({
+			"name": name,
+			"default_host": default_host,
+			"force_miss": force_miss,
+			"force_ssl": force_ssl,
+			"action": action,
+			"bypass_busy_wait": bypass_busy_wait,
+			"max_stale_age": max_stale_age,
+			"hash_keys": hash_keys,
+			"xff": xff,
+			"timer_support": timer_support,
+			"geo_headers": geo_headers,
+			"request_condition": request_condition,
+		}, FastlyRequestSettings.FIELDS)
+		content = self._fetch("/service/%s/version/%d/request_settings" % (service_id, version_number), method="POST", body=body)
+		return FastlyRequestSettings(self, content)
+
+
+	def get_request_settings(self, service_id, version_number, name):
+		"""Gets the specified Request Settings object."""
+		content = self._fetch("/service/%s/version/%d/request_settings/%s" % (service_id, version_number, name))
+		return FastlyHealthCheck(self, content)
+
+
+	def update_request_settings(self, service_id, version_number, name_key, **kwargs):
+		"""Updates the specified Request Settings object."""
+		body = self._formdata(kwargs, FastlyHealthCheck.FIELDS)
+		content = self._fetch("/service/%s/version/%d/request_settings/%s" % (service_id, version_number, name_key), method="PUT", body=body)
+		return FastlyHealthCheck(self, content)
+
+
+	def delete_request_settings(self, service_id, version_number, name):
+		"""Removes the specfied Request Settings object."""
+		content = self._fetch("/service/%s/version/%d/request_settings/%s" % (service_id, version_number, name), method="DELETE")
+		return self._status(content)
+
+
 	def list_response_objects(self, service_id, version_number):
+		"""Returns all Response Objects for the specified service and version."""
 		content = self._fetch("/service/%s/version/%d/response_object" % (service_id, version_number))
 		return map(lambda x: FastlyResponseObject(self, x), content)
 
 
 	def create_response_object(self, service_id, version_number, name, status="200", response="OK", content="", request_condition=None, cache_condition=None):
+		"""Creates a new Response Object."""
 		body = self._formdata({
 			"name": name,
 			"status": status,
@@ -700,57 +635,378 @@ class FastlyConnection(object):
 
 
 	def get_response_object(self, service_id, version_number, name):
+		"""Gets the specified Response Object."""
 		content = self._fetch("/service/%s/version/%d/response_object/%s" % (service_id, version_number, name))
 		return FastlyResponseObject(self, content)
 
 
 	def update_response_object(self, service_id, version_number, name_key, **kwargs):
+		"""Updates the specified Response Object."""
 		body = self._formdata(kwargs, FastlyResponseObject.FIELDS)
 		content = self._fetch("/service/%s/version/%d/response_object/%s" % (service_id, version_number, name_key), method="PUT", body=body)
 		return FastlyResponseObject(self, content)
 
 
 	def delete_response_object(self, service_id, version_number, name):
+		"""Deletes the specified Response Object."""
 		content = self._fetch("/service/%s/version/%d/response_object/%s" % (service_id, version_number, name), method="DELETE")
 		return self._status(content)
 
 
+	def create_service(self, customer_id, name, publish_key=None, comment=None):
+		"""Create a service."""
+		body = self._formdata({
+			"customer_id": customer_id,
+			"name": name,
+			"publish_key": publish_key,
+			"comment": comment,
+		}, FastlyService.FIELDS)
+		content = self._fetch("/service", method="POST", body=body)
+		return FastlyService(self, content)
+		
+
+	def list_services(self):
+		"""List Services."""
+		content = self._fetch("/service")
+		return map(lambda x: FastlyService(self, x), content)
+
+
+	def get_service(self, service_id):
+		"""Get a specific service by id."""
+		content = self._fetch("/service/%s" % service_id)
+		return FastlyService(self, content)
+
+
+	def get_service_details(self, service_id):
+		"""List detailed information on a specified service."""
+		content = self._fetch("/service/%s/details" % service_id)
+		return FastlyService(self, content)
+
+
+	def get_service_by_name(self, service_name):
+		"""Get a specific service by name."""
+		content = self._fetch("/service/search?name=%s" % service_name)
+		return FastlyService(self, content)
+
+
+	def update_service(self, service_id, **kwargs):
+		"""Update a service."""
+		body = self._formdata(kwargs, FastlyService.FIELDS)
+		content = self._fetch("/service/%s" % service_id, method="PUT", body=body)
+		return FastlyService(self, content)
+
+
+	def delete_service(self, service_id):
+		"""Delete a service."""
+		content = self._fetch("/service/%s" % service_id, method="DELETE")
+		return self._status(content)
+
+
+	def list_domains_by_service(self, service_id):
+		"""List the domains within a service."""
+		content = self._fetch("/service/%s/domain" % service_id, method="GET")
+		return map(lambda x: FastlyDomain(self, x), content)
+
+
+	def purge_service(self, service_id):
+		"""Purge everything from a service."""
+		content = self._fetch("/service/%s/purge_all" % service_id, method="POST")
+		return self._status(content)
+
+
+	def purge_service_by_key(self, service_id, key):
+		"""Purge a particular service by a key."""
+		content = self._fetch("/service/%s/purge/%s" % (service_id, key), method="POST")
+		return self._status(content)
+
+
+	def get_settings(self, service_id, version_number):
+		"""Get the settings for a particular service and version."""
+		content = self._fetch("/service/%s/version/%d/settings" % (service_id, version_number))
+		return FastlySettings(self, content)
+
+
+	def update_settings(self, service_id, version_number, settings={}):
+		"""Update the settings for a particular service and version."""
+		body = urllib.urlencode(settings)
+		content = self._fetch("/service/%s/version/%d/settings" % (service_id, version_number), method="PUT", body=body)
+		return FastlySettings(self, content)
+
+
+	def get_stats(self, service_id, stat_type=FastlyStatsType.ALL):
+		"""Get the stats from a service."""
+		content = self._fetch("/service/%s/stats/%s" % (service_id, stat_type))
+		return content
+
+
 	def list_syslogs(self, service_id, version_number):
+		"""List all of the Syslogs for a particular service and version."""
 		content = self._fetch("/service/%s/version/%d/syslog" % (service_id, version_number))
 		return map(lambda x: FastlySyslog(self, x), content)
 
 
-	def list_syslogs(self, service_id, version_number):
-		content = self._fetch("/service/%s/version/%d/syslog" % (service_id, version_number))
-		return map(lambda x: FastlySyslog(self, x), content)
-
-
-	def create_syslog(self, service_id, version_number, name, address=None, ipv4=None, hostname=None, port=514, _format=None):
+	def create_syslog(self,
+		service_id,
+		version_number,
+		name,
+		address,
+		port=514,
+		_format=None,
+		response_condition=None):
+		"""Create a Syslog for a particular service and version."""
 		body = self._formdata({
 			"name": name,
 			"address": address,
-			"ipv4": ipv4,
-			"hostname": hostname,
 			"port": port,
 			"format": _format,
+			"response_condition": response_condition,
 		}, FastlySyslog.FIELDS)
 		content = self._fetch("/service/%s/version/%d/syslog" % (service_id, version_number), method="POST", body=body)
 		return FastlySyslog(self, content)
 
 
 	def get_syslog(self, service_id, version_number, name):
+		"""Get the Syslog for a particular service and version."""
 		content = self._fetch("/service/%s/version/%d/syslog/%s" % (service_id, version_number, name))
 		return FastlySyslog(self, content)
 
 
 	def update_syslog(self, service_id, version_number, name_key, **kwargs):
+		"""Update the Syslog for a particular service and version."""
 		body = self._formdata(kwargs, FastlySyslog.FIELDS)
 		content = self._fetch("/service/%s/version/%d/syslog/%s" % (service_id, version_number, name_key), method="PUT", body=body)
 		return FastlySyslog(self, content)
 
 
 	def delete_syslog(self, service_id, version_number, name):
+		"""Delete the Syslog for a particular service and version."""
 		content = self._fetch("/service/%s/version/%d/syslog/%s" % (service_id, version_number, name), method="DELETE")
+		return self._status(content)
+
+
+	def change_password(self, old_password, new_password):
+		"""Update the user's password to a new one."""
+		body = self._formdata({
+			"old_password": old_password,
+			"password": new_password,
+		}, ["old_password", "password"])
+		content = self._fetch("/current_user/password", method="POST", body=body)
+		return FastlyUser(self, content)
+
+
+	def get_current_user(self):
+		"""Get the logged in user."""
+		content = self._fetch("/current_user")
+		return FastlyUser(self, content)
+
+
+	def get_user(self, user_id):
+		"""Get a specific user."""
+		content = self._fetch("/user/%s" % user_id)
+		return FastlyUser(self, content)
+
+
+	def create_user(self, customer_id, name, login, password, role=FastlyRoles.USER, require_new_password=True):
+		"""Create a user."""
+		body = self._formdata({
+			"customer_id": customer_id,
+			"name": name,
+			"login": login,
+			"password": password,
+			"role": role,
+			"require_new_password": require_new_password,
+		}, FastlyUser.FIELDS)
+		content = self._fetch("/user", method="POST", body=body)
+		return FastlyUser(self, content)
+
+
+	def update_user(self, user_id, **kwargs):
+		"""Update a user."""
+		body = self._formdata(kwargs, FastlyUser.FIELDS)
+		content = self._fetch("/user/%s" % user_id, method="PUT", body=body)
+		return FastlyUser(self, content)
+
+
+	def delete_user(self, user_id):
+		"""Delete a user."""
+		content = self._fetch("/user/%s" % user_id, method="DELETE")
+		return self._status(content)
+
+
+	def request_password_reset(self, user_id):
+		"""Requests a password reset for the specified user."""
+		content = self._fetch("/user/%s/password/request_reset" % (user_id), method="POST")
+		return FastlyUser(self, content)
+
+
+	def list_vcls(self, service_id, version_number):
+		"""List the uploaded VCLs for a particular service and version."""
+		content = self._fetch("/service/%s/version/%d/vcl" % (service_id, version_number))
+		return map(lambda x: FastlyVCL(self, x), content)
+
+
+	def upload_vcl(self, service_id, version_number, name, content, comment=None):
+		"""Upload a VCL for a particular service and version."""
+		body = self._formdata({
+			"name": name,
+			"vcl": content,
+			"comment": comment,
+
+		}, FastlyOrigin.FIELDS)
+		content = self._fetch("/service/%s/version/%d/vcl" % (service_id, version_number), method="POST", body=body)
+		return FastlyVCL(self, content)
+
+
+	def download_vcl(self, service_id, version_number, name):
+		"""Download the specified VCL."""
+		# TODO: Not sure what to do here, the documentation shows invalid response. Will have to test.
+		raise Exception("Not implemented")
+
+
+	def get_vcl(self, service_id, version_number, name, include_content=True):
+		"""Get the uploaded VCL for a particular service and version."""
+		content = self._fetch("/service/%s/version/%d/vcl/%s?include_content=%d" % (service_id, version_number, name, int(include_content)))
+		return FastlyVCL(self, content)
+
+
+	def get_vcl_html(self, service_id, version_number, name):
+		"""Get the uploaded VCL for a particular service and version with HTML syntax highlighting."""
+		content = self._fetch("/service/%s/version/%d/vcl/%s/content" % (service_id, version_number, name))
+		return content.get("content", None)
+
+
+	def get_generated_vcl(self, service_id, version_number):
+		"""Display the generated VCL for a particular service and version."""
+		content = self._fetch("/service/%s/version/%d/generated_vcl" % (service_id, version_number))
+		return FastlyVCL(self, content)
+
+
+	def get_generated_vcl_html(self, service_id, version_number):
+		"""Display the content of generated VCL with HTML syntax highlighting."""
+		content = self._fetch("/service/%s/version/%d/generated_vcl/content" % (service_id, version_number))
+		return content.get("content", None)
+
+
+	def set_main_vcl(self, service_id, version_number, name):
+		"""Set the specified VCL as the main."""
+		content = self._fetch("/service/%s/version/%d/vcl/%s/main" % (service_id, version_number, name_key), method="PUT", body=body)
+		return FastlyVCL(self, content)
+
+
+	def update_vcl(self, service_id, version_number, name_key, **kwargs):
+		"""Update the uploaded VCL for a particular service and version."""
+		body = self._formdata(kwargs, FastlyVCL.FIELDS)
+		content = self._fetch("/service/%s/version/%d/vcl/%s" % (service_id, version_number, name_key), method="PUT", body=body)
+		return FastlyVCL(self, content)
+
+
+	def delete_vcl(self, service_id, version_number, name):
+		"""Delete the uploaded VCL for a particular service and version."""
+		content = self._fetch("/service/%s/version/%d/vcl/%s" % (service_id, version_number, name), method="DELETE")
+		return self._status(content)
+
+
+	def create_version(self, service_id, comment=None):
+		"""Create a version for a particular service."""
+		body = self._formdata({
+			"service_id": service_id,
+			"comment": comment,
+		}, FastlyVersion.FIELDS)
+		content = self._fetch("/service/%s/version" % service_id, method="POST", body=body)
+		return FastlyVersion(self, content)
+		
+
+	def list_versions(self, service_id):
+		content = self._fetch("/service/%s/version"% service_id)
+		return map(lambda x: FastlyVersion(self, x), content)
+
+
+	def get_version(self, service_id, version_number):
+		"""Get the version for a particular service."""
+		content = self._fetch("/service/%s/version/%d" % (service_id, version_number))
+		return FastlyVersion(self, content)
+
+	def update_version(self, service_id, version_number, **kwargs):
+		"""Update a particular version for a particular service."""
+		body = self._formdata(kwargs, FastlyVersion.FIELDS)
+		content = self._fetch("/service/%s/version/%d/" % (service_id, version_number), method="PUT", body=body)
+		return FastlyVersion(self, content)
+
+
+	def clone_version(self, service_id, version_number):
+		"""Clone the current configuration into a new version."""
+		content = self._fetch("/service/%s/version/%d/clone" % (service_id, version_number), method="PUT")
+		return FastlyVersion(self, content)
+
+
+	def activate_version(self, service_id, version_number):
+		"""Activate the current version."""
+		content = self._fetch("/service/%s/version/%d/activate" % (service_id, version_number), method="PUT")
+		return FastlyVersion(self, content)
+
+
+	def deactivate_version(self, service_id, version_number):
+		"""Deactivate the current version."""
+		content = self._fetch("/service/%s/version/%d/deactivate" % (service_id, version_number), method="PUT")
+		return FastlyVersion(self, content)
+
+
+	def validate_version(self, service_id, version_number):
+		"""Validate the version for a particular service and version."""
+		content = self._fetch("/service/%s/version/%d/validate" % (service_id, version_number))
+		return self._status(content)
+
+
+	def lock_version(self, service_id, version_number):
+		"""Locks the specified version."""
+		content = self._fetch("/service/%s/version/%d/lock" % (service_id, version_number))
+		return self._status(content)
+
+
+	def list_wordpressess(self, service_id, version_number):
+		"""Get all of the wordpresses for a specified service and version."""
+		content = self._fetch("/service/%s/version/%d/wordpress" % (service_id, version_number))
+		return map(lambda x: FastlyWordpress(self, x), content)
+
+
+	def create_wordpress(self,
+		service_id,
+		version_number,
+		name,
+		path,
+		comment=None):
+		"""Create a wordpress for the specified service and version."""
+		body = self._formdata({
+			"name": name,
+			"path": path,
+			"comment": comment,
+		}, FastlyWordpress.FIELDS)
+		content = self._fetch("/service/%s/version/%d/wordpress" % (service_id, version_number), method="POST", body=body)
+		return FastlyWordpress(self, content)
+
+
+	def get_wordpress(self, service_id, version_number, name):
+		"""Get information on a specific wordpress."""
+		content = self._fetch("/service/%s/version/%d/wordpress/%s" % (service_id, version_number, name))
+		return FastlyWordpress(self, content)
+
+
+	def update_wordpress(self, service_id, version_number, name_key, **kwargs):
+		"""Update a specified wordpress."""
+		body = self._formdata(kwargs, FastlyWordpress.FIELDS)
+		content = self._fetch("/service/%s/version/%d/wordpress/%s" % (service_id, version_number, name_key), method="PUT", body=body)
+		return FastlyWordpress(self, content)
+
+
+	def delete_wordpress(self, service_id, version_number, name):
+		"""Delete a specified wordpress."""
+		content = self._fetch("/service/%s/version/%d/wordpress/%s" % (service_id, version_number, name), method="DELETE")
+		return self._status(content)
+
+
+	# TODO: Is this broken?
+	def delete_version(self, service_id, version_number):
+		content = self._fetch("/service/%s/version/%d" % (service_id, version_number), method="DELETE")
 		return self._status(content)
 	
 
@@ -821,12 +1077,39 @@ class FastlyConnection(object):
 			raise FastlyError(status)
 
 
-class FastlyError(Exception):
-	def __init__(self, status):
-		if isinstance(status, FastlyStatus):
-			Exception.__init__(self, "FastlyError: %s (%s)" % (status.msg, status.detail))
-			return
-		Exception.__init__(self, status)
+class IDateStampedObject(object):
+	@property
+	def created_date(self):
+		if hasattr(self, "created_at"):
+			return self._parse_date(self.created_at)
+		else:
+			return self._parse_date(self.created)
+
+	@property
+	def updated_date(self):
+		if hasattr(self, "updated_at"):
+			return self._parse_date(self.updated_at)
+		else:
+			return self._parse_date(self.updated)
+
+	@property
+	def deleted_date(self):
+		if hasattr(self, "deleted_at"):
+			return self._parse_date(self.deleted_at)
+		else:
+			return self._parse_date(self.deleted)
+
+
+class IServiceObject(object):
+	@property
+	def service(self):
+		return self._conn.get_service(self.service_id)
+
+
+class IServiceVersionObject(IServiceObject):
+	@property
+	def service_version(self):
+		return self._conn.get_service_version(self.service_id, self.version)
 
 
 class FastlyObject(object):
@@ -850,36 +1133,20 @@ class FastlyObject(object):
 		return datetime.strptime(_date, "%Y-%m-%dT%H:%M:%S+00:00")
 
 
-class IDateStampedObject(object):
-	@property
-	def created_date(self):
-		if hasattr(self, "created_at"):
-			return self._parse_date(self.created_at)
-		else:
-			return self._parse_date(self.created)
-
-	@property
-	def updated_date(self):
-		if hasattr(self, "updated_at"):
-			return self._parse_date(self.updated_at)
-		else:
-			return self._parse_date(self.updated)
-
-	@property
-	def deleted_date(self):
-		if hasattr(self, "deleted_at"):
-			return self._parse_date(self.deleted_at)
-		else:
-			return self._parse_date(self.deleted)
-	
-
-
 class FastlyStatus(FastlyObject):
 	FIELDS = [
 		"msg",
 		"detail",
 		"status",
 	]
+
+
+class FastlyError(Exception):
+	def __init__(self, status):
+		if isinstance(status, FastlyStatus):
+			Exception.__init__(self, "FastlyError: %s (%s)" % (status.msg, status.detail))
+			return
+		Exception.__init__(self, status)
 
 
 class FastlySession(FastlyObject):
@@ -893,6 +1160,285 @@ class FastlySession(FastlyObject):
 	@property
 	def user(self):
 		return FastlyUser(self._conn, self._data["user"])
+
+
+class FastlyBackend(FastlyObject, IServiceVersionObject):
+	"""A Backend is an address (ip or domain) from which Fastly pulls content. There can be multiple Backends for a Service."""
+	FIELDS = [
+		"service_id",
+		"version",
+		"name",
+		"address",
+		"port",
+		"use_ssl",
+		"connect_timeout",
+		"first_byte_timeout",
+		"between_bytes_timeout",
+		"error_threshold",
+		"max_conn",
+		"weight",
+		"auto_loadbalance",
+		"request_condition",
+		"healthcheck",
+		"comment",
+	]
+
+	@property
+	def healthcheck(self):
+		return self._conn.get_healthcheck(self.service_id, self.version, self.healthcheck)
+
+
+class FastlyCacheSettings(FastlyObject, IServiceVersionObject):
+	"""Controls how caching is performed on Fastly. When used in conjunction with Conditions the Cache Settings provide you with fine grain control over how long content persists in the cache."""
+	FIELDS = [
+		"service_id",
+		"version",
+		"name",
+		"action",
+		"ttl",
+		"stale_ttl",
+		"cache_condition",
+	]
+
+
+class FastlyCondition(FastlyObject, IServiceVersionObject):
+	"""Conditions are used to control when and how other objects are used in a service configuration. They contain a statement that evaluates to either true or false and is used to determine whether the condition is met. 
+
+	Depending on the type of the condition, the statment field can make reference to the Varnish Variables req, resp, and/or beresp."""
+	FIELDS = [
+		"name",
+		"service_id",
+		"version",
+		"type",
+		"statement",
+		"priority",
+	]
+
+
+class FastlyCustomer(FastlyObject, IDateStampedObject):
+	"""A Customer is the base object which owns your Users and Services."""
+	FIELDS = [
+		"can_configure_wordpress",
+		"can_edit_matches",
+		"name",
+		"created_at",
+		"updated_at",
+		"can_stream_syslog",
+		"id",
+		"pricing_plan",
+		"can_upload_vcl",
+		"has_config_panel",
+		"raw_api_key",
+		"has_billing_panel",
+		"can_reset_passwords",
+		"owner_id",
+	]
+
+	@property
+	def owner(self):
+		return self._conn.get_user(self.owner_id)
+
+
+class FastlyDirector(FastlyObject, IServiceVersionObject, IDateStampedObject):
+	"""A Director is responsible for balancing requests among a group of Backends. In addition to simply balancing, Directors can be configured to attempt retrying failed requests. Additionally, Directors have a quorum setting which can be used to determine when the Director as a whole is considered "up", in order to prevent "server whack-a-mole" following an outage as servers come back up."""
+	FIELDS = [
+		"name",
+		"service_id",
+		"version"
+		"quorum",
+		"type",
+		"retries",
+		"created",
+		"updated",
+		"deleted",
+		"capacity",
+		"comment",
+	]
+
+
+class FastlyDirectorBackend(FastlyObject, IServiceVersionObject, IDateStampedObject):
+	"""Maps and relates backends as belonging to directors. Backends can belong to any number of directors but directors can only hold one reference to a specific backend."""
+	FIELDS = [
+		"service_id",
+		"version",
+		"director",
+		"backend",
+		"created",
+		"updated",
+		"deleted",
+	]
+
+
+class FastlyDomain(FastlyObject, IServiceVersionObject):
+	"""A Domain represents the domain name through which visitors will retrieve content. There can be multiple Domains for a Service."""
+	FIELDS = [
+		"name",
+		"comment",
+		"service_id",
+		"version",
+	]
+
+
+class FastlyDomainCheck(FastlyObject):
+	@property
+	def domain(self):
+		return FastlyDomain(self._conn, self._data[0])
+
+	@property
+	def cname(self):
+		return self._data[1]
+
+	@property
+	def success(self):
+		return self._data[2]
+
+
+class FastlyEventLog(FastlyObject):
+	"""EventLogs keep track of things that occur within your services or organization. Currently we track events such as activation and deactivation of Versions and mass purges. In the future we intend to track more events and let you trigger EventLog creation as well."""
+	FIELDS = [
+		"object_type",
+		"id",
+		"message",
+		"details",
+		"level",
+		"timestamp",
+		"system",
+		"subsystem",
+	]
+
+
+class FastlyHeader(FastlyObject, IServiceVersionObject):
+	"""Header objects are used to add, modify, or delete headers from requests and responses. The header content can be simple strings or be derived from variables inside Varnish. Regular expressions can be used to customize the headers even further."""
+	FIELDS = [
+		"name",
+		"service_id",
+		"version",
+		"dst",
+		"src",
+		"type",
+		"action",
+		"regex",
+		"substitution",
+		"ignore_if_set",
+		"priority",
+		"response_condition",
+		"request_condition",
+		"cache_condition",
+	]
+
+
+class FastlyHealthCheck(FastlyObject, IServiceVersionObject):
+	"""Healthchecks are used to customize the way Fastly checks on your Backends. Only Backends that have successful Healthchecks will be sent traffic, thus assuring that the failure of one server does not affect visitors."""
+	FIELDS = [
+		"service_id",
+		"version",
+		"name",
+		"method",
+		"host",
+		"path",
+		"http_version",
+		"timeout",
+		"check_interval",
+		"expected_response",
+		"window",
+		"threshold",
+		"initial",
+		"comment",
+	]
+
+
+class FastlyPurge(FastlyObject):
+	"""Purging removes content from Fastly so it can be refreshed from your origin servers."""
+	FIELDS = [
+		"status",
+		"id",
+	]
+
+
+class FastlyPurgeStatus(FastlyObject):
+	"""The status of a given purge request."""
+	FIELDS = [
+		"timestamp",
+		"server",
+	]
+
+
+class FastlyRequestSettings(FastlyObject, IServiceVersionObject):
+	"""Settings used to customize Fastly's request handling. When used with Conditions the Request Settings object allows you to fine tune how specific types of requests are handled."""
+	FIELDS = [
+		"service_id",
+		"version",
+		"name",
+		"default_host",
+		"force_miss",
+		"force_ssl",
+		"action",
+		"bypass_busy_wait",
+		"max_stale_age",
+		"hash_keys",
+		"xff",
+		"timer_support",
+		"geo_headers",
+		"request_condition",
+	]
+
+
+class FastlyResponseObject(FastlyObject, IServiceVersionObject):
+	"""Allows you to create synthetic responses that exist entirely on the varnish machine. Useful for creating error or maintainence pages that exists outside the scope of your datacenter. Best when used with Condition objects."""
+	FIELDS = [
+		"name",
+		"service_id",
+		"version",
+		"status",
+		"response",
+		"content",
+		"cache_condition",
+		"request_condition",
+	]
+
+
+class FastlyService(FastlyObject):
+	"""A Service represents the configuration for a website, app, api, or anything else to be served through Fastly. A Service can have many Versions, through which Backends, Domains, and more can be configured."""
+	FIELDS = [
+		"id",
+		"name",
+		"customer_id",
+		"publish_key",
+		"active_version",
+		"versions"
+		"comment",
+	]
+
+	@property
+	def active_version(self):
+		for version in self.versions.values():
+			if version.active:
+				return version
+		return None
+
+
+class FastlySettings(FastlyObject, IServiceVersionObject):
+	"""Handles default settings for a particular version of a service."""
+	FIELDS = [
+		"service_id",
+		"version",
+	]
+
+
+class FastlySyslog(FastlyObject, IServiceVersionObject, IDateStampedObject):
+	"""Fastly will stream log messages to the location, and in the format, specified in the Syslog object."""
+	FIELDS = [
+		"name",
+		"service_id",
+		"version",
+		"address",
+		"port",
+		"format",
+		"response_condition",
+		"created",
+		"updated",
+		"deleted",
+	]
 
 
 class FastlyUser(FastlyObject, IDateStampedObject):
@@ -913,34 +1459,22 @@ class FastlyUser(FastlyObject, IDateStampedObject):
 		return self._conn.get_customer(self.customer_id)
 
 
-class FastlyService(FastlyObject):
+class FastlyVCL(FastlyObject, IServiceVersionObject):
+	"""A VCL is a Varnish configuration file used to customize the configuration for a Service."""
 	FIELDS = [
-		"comment",
 		"name",
+		"service_id",
 		"version",
-		"customer_id",
-		"id",
+		"generation",
+		"md5",
+		"content",
+		"main",
+		"vcl",
 	]
 
-	@property
-	def versions(self):
-		return dict([ (v.number, v) for v in self.list_service_versions(self.id) ])
 
-	@property
-	def active_version(self):
-		for version in self.versions.values():
-			if version.active:
-				return version
-		return None
-
-
-class IServiceObject(object):
-	@property
-	def service(self):
-		return self._conn.get_service(self.service_id)
-
-
-class FastlyServiceVersion(FastlyObject, IServiceObject, IDateStampedObject):
+class FastlyVersion(FastlyObject, IServiceObject, IDateStampedObject):
+	"""A Version represents a specific instance of the configuration for a Service. A Version can be cloned, locked, activated, or deactivated."""
 	FIELDS = [
 		"comment",
 		"staging",
@@ -992,229 +1526,14 @@ class FastlyServiceVersion(FastlyObject, IServiceObject, IDateStampedObject):
 		return dict([ (v.name, v) for v in self._conn.list_vcls(self.service_id, int(self.number))])
 
 
-class IServiceVersionObject(IServiceObject):
-	@property
-	def service_version(self):
-		return self._conn.get_service_version(self.service_id, self.version)
-
-
-class FastlyServiceVersionSettings(FastlyObject, IServiceVersionObject):
-	FIELDS = [
-		"service_id",
-		"version",
-		"settings",
-	]
-
-
-class FastlyBackend(FastlyObject, IServiceVersionObject):
+class FastlyWordpress(FastlyObject, IServiceVersionObject):
+	"""The Wordpress object applies configuration optimized for Wordpress to a given path."""
 	FIELDS = [
 		"service_id",
 		"version",
 		"name",
-		"address",
-		"port",
-		"use_ssl",
-		"connect_timeout",
-		"first_byte_timeout",
-		"between_bytes_timeout",
-		"error_threshold",
-		"max_conn",
-		"weight",
-		"auto_loadbalance",
-		"request_condition",
-		"healthcheck",
-		"comment",
-	]
-
-	@property
-	def healthcheck(self):
-		return self._conn.get_healthcheck(self.service_id, self.version, self.healthcheck)
-
-
-class FastlyCacheSetting(FastlyObject, IServiceVersionObject):
-	FIELDS = [
-		"service_id",
-		"version",
-		"name",
-		"action",
-		"ttl",
-		"stale_ttl",
-		"cache_condition",
-	]
-
-	@property
-	def healthcheck(self):
-		return self._conn.get_healthcheck(self.service_id, self.version, self.healthcheck)
-
-
-class FastlyCondition(FastlyObject, IServiceVersionObject):
-	FIELDS = [
-		"name",
-		"service_id",
-		"version",
-		"type",
-		"statement",
-		"priority",
-	]
-
-
-class FastlyCustomer(FastlyObject, IDateStampedObject):
-	FIELDS = [
-		"can_configure_wordpress",
-		"can_edit_matches",
-		"name",
-		"created_at",
-		"updated_at",
-		"can_stream_syslog",
-		"id",
-		"pricing_plan",
-		"can_upload_vcl",
-		"has_config_panel",
-		"raw_api_key",
-		"has_billing_panel",
-		"can_reset_passwords",
-		"owner_id",
-	]
-
-	@property
-	def owner(self):
-		return self._conn.get_user(self.owner_id)
-
-
-class FastlyDirector(FastlyObject, IServiceVersionObject, IDateStampedObject):
-	FIELDS = [
-		"name",
-		"service_id",
-		"version"
-		"quorum",
-		"type",
-		"retries",
-		"created",
-		"updated",
-		"deleted",
-		"capacity",
-		"comment",
-	]
-
-
-class FastlyDirectorBackend(FastlyObject, IServiceVersionObject, IDateStampedObject):
-	FIELDS = [
-		"service_id",
-		"version",
-		"director",
-		"backend",
-		"created",
-		"updated",
-		"deleted",
-	]
-
-
-class FastlyHealthCheck(FastlyObject, IServiceVersionObject):
-	FIELDS = [
-		"name",
-		"comment",
-		"service_id",
-		"version",
-		"method",
-		"initial",
-		"host",
 		"path",
-		"http_version",
-		"timeout",
-		"window",
-		"threshold",
-	]
-
-
-class FastlyDomain(FastlyObject, IServiceVersionObject):
-	FIELDS = [
-		"name",
 		"comment",
-		"service_id",
-		"version",
-	]
-
-
-class FastlyDomainCheck(FastlyObject):
-	@property
-	def domain(self):
-		return FastlyDomain(self._conn, self._data[0])
-
-	@property
-	def cname(self):
-		return self._data[1]
-
-	@property
-	def success(self):
-		return self._data[2]
-
-
-class FastlyOrigin(FastlyObject, IServiceVersionObject):
-	FIELDS = [
-		"name",
-		"comment",
-		"service_id",
-		"version",
-	]
-
-
-class FastlyVCL(FastlyObject, IServiceVersionObject):
-	FIELDS = [
-		"name",
-		"service_id",
-		"version",
-		"generation",
-		"md5",
-		"content",
-		"main",
-	]
-
-
-class FastlySyslog(FastlyObject, IServiceVersionObject, IDateStampedObject):
-	FIELDS = [
-		"name",
-		"service_id",
-		"version",
-		"address",
-		"ipv4",
-		"hostname",
-		"port",
-		"format",
-		"created",
-		"updated",
-		"deleted",
-	]
-
-
-class FastlyResponseObject(FastlyObject, IServiceVersionObject):
-	FIELDS = [
-		"name",
-		"service_id",
-		"version",
-		"status",
-		"response",
-		"content",
-		"cache_condition",
-		"request_condition",
-	]
-
-
-class FastlyHeader(FastlyObject, IServiceVersionObject):
-	FIELDS = [
-		"name",
-		"service_id",
-		"version",
-		"dst",
-		"src",
-		"type",
-		"action",
-		"regex",
-		"substitution",
-		"ignore_if_set",
-		"priority",
-		"response_condition",
-		"request_condition",
-		"cache_condition",
 	]
 
 
