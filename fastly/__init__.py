@@ -44,11 +44,17 @@ class FastlyRoles(object):
 	SUPERUSER = "superuser"
 
 
-class FastlyHeaderType(object):
+class FastlyCacheSettingAction(object):
+	CACHE = "cache"
+	PASS = "pass"
+	RESTART = "restart"
+
+
+class FastlyConditionType(object):
 	RESPONSE="response"
-	FETCH="fetch"
 	CACHE="cache"
 	REQUEST="request"
+	FETCH="fetch"
 
 
 class FastlyHeaderAction(object):
@@ -59,11 +65,11 @@ class FastlyHeaderAction(object):
 	REGEX_ALL="regex_repeat"
 
 
-class FastlyConditionType(object):
-	RESPONSE="RESPONSE"
-	CACHE="CACHE"
-	REQUEST="REQUEST"
-	FETCH="FETCH"
+class FastlyHeaderType(object):
+	RESPONSE="response"
+	FETCH="fetch"
+	CACHE="cache"
+	REQUEST="request"
 
 
 class FastlyConnection(object):
@@ -123,32 +129,6 @@ class FastlyConnection(object):
 
 	def delete_user(self, user_id):
 		content = self._fetch("/user/%s" % user_id, method="DELETE")
-		return self._status(content)
-
-
-	def get_current_customer(self):
-		content = self._fetch("/current_customer")
-		return FastlyCustomer(self, content)
-
-
-	def list_customers(self):
-		content = self._fetch("/customer")
-		return map(lambda x: FastlyCustomer(self, x), content)
-
-
-	def get_customer(self, customer_id):
-		content = self._fetch("/customer/%s" % customer_id)
-		return FastlyCustomer(self, content)
-
-
-	def update_customer(self, customer_id, **kwargs):
-		body = self._formdata(kwargs, FastlyCustomer.FIELDS)
-		content = self._fetch("/customer/%s" % customer_id, method="PUT", body=body)
-		return FastlyCustomer(self, content)
-
-
-	def delete_customer(self, customer_id):
-		content = self._fetch("/customer/%s" % customer_id, method="DELETE")
 		return self._status(content)
 
 
@@ -267,72 +247,287 @@ class FastlyConnection(object):
 
 
 	def list_backends(self, service_id, version_number):
+		"""List all backends for a particular service and version."""
+
 		content = self._fetch("/service/%s/version/%d/backend" % (service_id, version_number))
 		return map(lambda x: FastlyBackend(self, x), content)
 
 
-	def create_backend(self, service_id, version_number, 
+	def create_backend(self, 
+		service_id,
+		version_number, 
 		name, 
 		address,
-		healthcheck,
-		port=80,
-		between_bytes_timeout=10000,
-		connect_timeout=1000,
-		error_threshold=0,
-		first_byte_timeout=15000,
-		max_conn=20,
 		use_ssl=False,
+		port=80,
+		connect_timeout=1000,
+		first_byte_timeout=15000,
+		between_bytes_timeout=10000,
+		error_threshold=0,
+		max_conn=20,
 		weight=100,
+		auto_loadbalance=False,
+		request_condition=None,
+		healthcheck=None,
 		comment=None):
+		"""Create a backend for a particular service and version."""
 		body = self._formdata({
 			"name": name,
 			"address": address,
-			"port": port,
-			"healthcheck": healthcheck,
-			"between_bytes_timeout": between_bytes_timeout,
-			"connect_timeout": connect_timeout,
-			"error_threshold": error_threshold,
-			"first_byte_timeout": first_byte_timeout,
-			"max_conn": max_conn,
 			"use_ssl": use_ssl,
+			"port": port,
+			"connect_timeout": connect_timeout,
+			"first_byte_timeout": first_byte_timeout,
+			"between_bytes_timeout": between_bytes_timeout,
+			"error_threshold": error_threshold,
+			"max_conn": max_conn,
 			"weight": weight,
+			"auto_loadbalance": auto_loadbalance,
+			"request_condition": request_condition,
+			"healthcheck": healthcheck,
 			"comment": comment,
-
 		}, FastlyBackend.FIELDS)
 		content = self._fetch("/service/%s/version/%d/backend" % (service_id, version_number), method="POST", body=body)
 		return FastlyBackend(self, content)
 
 
 	def get_backend(self, service_id, version_number, name):
+		"""Get the backend for a particular service and version."""
 		content = self._fetch("/service/%s/version/%d/backend/%s" % (service_id, version_number, name))
 		return FastlyBackend(self, content)
 
 
 	def update_backend(self, service_id, version_number, name_key, **kwargs):
+		"""Update the backend for a particular service and version."""
 		body = self._formdata(kwargs, FastlyBackend.FIELDS)
 		content = self._fetch("/service/%s/version/%d/backend/%s" % (service_id, version_number, name_key), method="PUT", body=body)
 		return FastlyBackend(self, content)
 
 
 	def delete_backend(self, service_id, version_number, name):
+		"""Delete the backend for a particular service and version."""
 		content = self._fetch("/service/%s/version/%d/backend/%s" % (service_id, version_number, name), method="DELETE")
 		return self._status(content)
 
 
-	# TODO: Not working?
 	def check_backends(self, service_id, version_number):
+		"""Performs a health check against each backend in version. If the backend has a specific type of healthcheck, that one is performed, otherwise a HEAD request to / is performed. The first item is the details on the Backend itself. The second item is details of the specific HTTP request performed as a health check. The third item is the response details."""
 		content = self._fetch("/service/%s/version/%d/backend/check_all" % (service_id, version_number))
-		print content
+		# TODO: Use a strong-typed class for output?
+		return content
+
+
+	def list_cache_settings(self, service_id, version_number):
+		"""Get a list of all cache settings for a particular service and version."""
+		content = self._fetch("/service/%s/version/%d/cache_settings" % (service_id, version_number))
+		return map(lambda x: FastlyCacheSetting(self, x), content)
+
+
+	def create_cache_setting(self, 
+		service_id, 
+		version_number, 
+		name,
+		action,
+		ttl=None,
+		stale_ttl=None,
+		cache_condition=None):
+		"""Create a new cache settings object."""
+		body = self._formdata({
+			"name": name,
+			"action": action,
+			"ttl": ttl,
+			"stale_ttl": stale_ttl,
+			"cache_condition": cache_condition,
+		}, FastlyCacheSetting.FIELDS)
+		content = self._fetch("/service/%s/version/%d/cache_settings" % (service_id, version_number), method="POST", body=body)
+		return FastlyCacheSetting(self, content)
+
+
+	def get_cache_setting(self, service_id, version_number, name):
+		"""Get a specific cache settings object."""
+		content = self._fetch("/service/%s/version/%d/cache_settings/%s" % (service_id, version_number, name))
+		return FastlyCacheSetting(self, content)
+
+
+	def update_cache_setting(self, service_id, version_number, name_key, **kwargs):
+		"""Update a specific cache settings object."""
+		body = self._formdata(kwargs, FastlyCacheSetting.FIELDS)
+		content = self._fetch("/service/%s/version/%d/cache_settings/%s" % (service_id, version_number, name_key), method="PUT", body=body)
+		return FastlyCacheSetting(self, content)
+
+
+	def delete_cache_setting(self, service_id, version_number, name):
+		"""Delete a specific cache settings object."""
+		content = self._fetch("/service/%s/version/%d/cache_settings/%s" % (service_id, version_number, name), method="DELETE")
+		return self._status(content)
+
+
+	def list_conditions(self, service_id, version_number):
+		"""Gets all conditions for a particular service and version."""
+		content = self._fetch("/service/%s/version/%d/condition" % (service_id, version_number))
+		return map(lambda x: FastlyCondition(self, x), content)
+
+
+	def create_condition(self, 
+		service_id, 
+		version_number,
+		name,
+		_type,
+		statement,
+		priority="10", 
+		comment=None):
+		"""Creates a new condition."""
+		body = self._formdata({
+			"name": name,
+			"type": _type,
+			"statement": statement,
+			"priority": priority,
+			"comment": comment,
+		}, FastlyCondition.FIELDS)
+		content = self._fetch("/service/%s/version/%d/condition" % (service_id, version_number), method="POST", body=body)
+		return FastlyCondition(self, content)
+
+
+	def get_condition(self, service_id, version_number, name):
+		"""Gets a specified condition."""
+		content = self._fetch("/service/%s/version/%d/condition/%s" % (service_id, version_number, name))
+		return FastlyCondition(self, content)
+
+
+	def update_condition(self, service_id, version_number, name_key, **kwargs):
+		"""Updates the specified condition."""
+		body = self._formdata(kwargs, FastlyCondition.FIELDS)
+		content = self._fetch("/service/%s/version/%d/condition/%s" % (service_id, version_number, name_key), method="PUT", body=body)
+		return FastlyCondition(self, content)
+
+
+	def delete_condition(self, service_id, version_number, name):
+		"""Deletes the specified condition."""
+		content = self._fetch("/service/%s/version/%d/condition/%s" % (service_id, version_number, name), method="DELETE")
+		return self._status(content)
+
+
+	def content_edge_check(self, url):
+		"""Retrieve headers and MD5 hash of the content for a particular url from each Fastly edge server."""
+		prefixes = ["http://", "https://"]
+		for prefix in prefixes:
+			if url.startswith(prefix):
+				url = url[len(prefix):]
+				break
+		content = self._fetch("/content/edge_check/%s" % url)
+		return content
+
+
+	def get_current_customer(self):
+		"""Get the logged in customer."""
+		content = self._fetch("/current_customer")
+		return FastlyCustomer(self, content)
+
+
+	def get_customer(self, customer_id):
+		"""Get a specific customer."""
+		content = self._fetch("/customer/%s" % customer_id)
+		return FastlyCustomer(self, content)
+
+
+	def get_customer_details(self, customer_id):
+		"""Get a specific customer, owner, and billing contact."""
+		content = self._fetch("/customer/details/%s" % customer_id)
+		return content
+
+
+	def get_customer_users(self, customer_id):
+		"""List all users from a specified customer id."""
+		content = self._fetch("/customer/users/%s" % customer_id)
+		return map(lambda x: FastlyUser(self, x), content)
+
+
+	def update_customer(self, customer_id, **kwargs):
+		"""Update a customer."""
+		body = self._formdata(kwargs, FastlyCustomer.FIELDS)
+		content = self._fetch("/customer/%s" % customer_id, method="PUT", body=body)
+		return FastlyCustomer(self, content)
+
+
+	def delete_customer(self, customer_id):
+		"""Delete a customer."""
+		content = self._fetch("/customer/%s" % customer_id, method="DELETE")
+		return self._status(content)
+
+
+	def list_directors(self, service_id, version_number):
+		"""List the directors for a particular service and version."""
+		content = self._fetch("/service/%s/version/%d/director" % (service_id, version_number))
+		return map(lambda x: FastlyDirector(self, x), content)
+
+
+	def create_director(self, service_id, version_number, 
+		name, 
+		quorum=75,
+		_type=1,
+		retries=5):
+		"""Create a director for a particular service and version."""
+		body = self._formdata({
+			"name": name,
+			"comment": comment,
+			"quorum": quorum,
+			"type": _type,
+			"retries": retries,
+
+		}, FastlyDirector.FIELDS)
+		content = self._fetch("/service/%s/version/%d/director" % (service_id, version_number), method="POST", body=body)
+		return FastlyDirector(self, content)
+
+
+	def get_director(self, service_id, version_number, name):
+		"""Get the director for a particular service and version."""
+		content = self._fetch("/service/%s/version/%d/director/%s" % (service_id, version_number, name))
+		return FastlyDirector(self, content)
+
+
+	def update_director(self, service_id, version_number, name_key, **kwargs):
+		"""Update the director for a particular service and version."""
+		body = self._formdata(kwargs, FastlyDirector.FIELDS)
+		content = self._fetch("/service/%s/version/%d/director/%s" % (service_id, version_number, name_key), method="PUT", body=body)
+		return FastlyDirector(self, content)
+
+
+	def delete_director(self, service_id, version_number, name):
+		"""Delete the director for a particular service and version."""
+		content = self._fetch("/service/%s/version/%d/director/%s" % (service_id, version_number, name), method="DELETE")
+		return self._status(content)
+
+
+	def get_director_backend(self, service_id, version_number, director_name, backend_name):
+		"""Returns the relationship between a Backend and a Director. If the Backend has been associated with the Director, it returns a simple record indicating this. Otherwise, returns a 404."""
+		content = self._fetch("/service/%s/version/%d/director/%s/backend/%s" % (service_id, version_number, director_name, backend_name), method="GET")
+		return FastlyDirectorBackend(self, content)
+
+
+	def create_director_backend(self, service_id, version_number, director_name, backend_name):
+		"""Establishes a relationship between a Backend and a Director. The Backend is then considered a member of the Director and can be used to balance traffic onto."""
+		content = self._fetch("/service/%s/version/%d/director/%s/backend/%s" % (service_id, version_number, director_name, backend_name), method="POST")
+		return FastlyDirectorBackend(self, content)
+
+	
+	def delete_director_backend(self, service_id, version_number, director_name, backend_name):
+		"""Deletes the relationship between a Backend and a Director. The Backend is no longer considered a member of the Director and thus will not have traffic balanced onto it from this Director."""
+		content = self._fetch("/service/%s/version/%d/director/%s/backend/%s" % (service_id, version_number, director_name, backend_name), method="DELETE")
+		return self._status(content)
 
 
 	def list_domains(self, service_id, version_number):
+		"""List the domains for a particular service and version."""
 		content = self._fetch("/service/%s/version/%d/domain" % (service_id, version_number))
 		return map(lambda x: FastlyDomain(self, x), content)
 
 
-	def create_domain(self, service_id, version_number, 
+	def create_domain(self,
+		service_id, 
+		version_number, 
 		name, 
 		comment=None):
+		"""Create a domain for a particular service and version."""
 		body = self._formdata({
 			"name": name,
 			"comment": comment,
@@ -361,84 +556,6 @@ class FastlyConnection(object):
 	def check_domain(self, service_id, version_number, name):
 		content = self._fetch("/service/%s/version/%d/domain/%s/check" % (service_id, version_number, name))
 		return FastlyDomainCheck(self, content)
-
-
-	def list_directors(self, service_id, version_number):
-		content = self._fetch("/service/%s/version/%d/director" % (service_id, version_number))
-		return map(lambda x: FastlyDirector(self, x), content)
-
-
-	def create_director(self, service_id, version_number, 
-		name, 
-		quorum=75,
-		_type=1,
-		retries=5,
-		comment=None):
-		body = self._formdata({
-			"name": name,
-			"comment": comment,
-			"quorum": quorum,
-			"type": _type,
-			"retries": retries,
-
-		}, FastlyDirector.FIELDS)
-		content = self._fetch("/service/%s/version/%d/director" % (service_id, version_number), method="POST", body=body)
-		return FastlyDirector(self, content)
-
-
-	def get_director(self, service_id, version_number, name):
-		content = self._fetch("/service/%s/version/%d/director/%s" % (service_id, version_number, name))
-		return FastlyDirector(self, content)
-
-
-	def update_director(self, service_id, version_number, name_key, **kwargs):
-		body = self._formdata(kwargs, FastlyDirector.FIELDS)
-		content = self._fetch("/service/%s/version/%d/director/%s" % (service_id, version_number, name_key), method="PUT", body=body)
-		return FastlyDirector(self, content)
-
-
-	def delete_director(self, service_id, version_number, name):
-		content = self._fetch("/service/%s/version/%d/director/%s" % (service_id, version_number, name), method="DELETE")
-		return self._status(content)
-
-
-	def list_origins(self, service_id, version_number):
-		content = self._fetch("/service/%s/version/%d/origin" % (service_id, version_number))
-		return map(lambda x: FastlyOrigin(self, x), content)
-
-
-	def create_origin(self, service_id, version_number, 
-		name, 
-		quorum=75,
-		_type=1,
-		retries=5,
-		comment=None):
-		body = self._formdata({
-			"name": name,
-			"comment": comment,
-			"quorum": quorum,
-			"type": _type,
-			"retries": retries,
-
-		}, FastlyOrigin.FIELDS)
-		content = self._fetch("/service/%s/version/%d/origin" % (service_id, version_number), method="POST", body=body)
-		return FastlyOrigin(self, content)
-
-
-	def get_origin(self, service_id, version_number, name):
-		content = self._fetch("/service/%s/version/%d/origin/%s" % (service_id, version_number, name))
-		return FastlyOrigin(self, content)
-
-
-	def update_origin(self, service_id, version_number, name_key, **kwargs):
-		body = self._formdata(kwargs, FastlyOrigin.FIELDS)
-		content = self._fetch("/service/%s/version/%d/origin/%s" % (service_id, version_number, name_key), method="PUT", body=body)
-		return FastlyOrigin(self, content)
-
-
-	def delete_origin(self, service_id, version_number, name):
-		content = self._fetch("/service/%s/version/%d/origin/%s" % (service_id, version_number, name), method="DELETE")
-		return self._status(content)
 
 
 	def list_vcls(self, service_id, version_number):
@@ -521,39 +638,6 @@ class FastlyConnection(object):
 
 	def delete_healthcheck(self, service_id, version_number, name):
 		content = self._fetch("/service/%s/version/%d/healthcheck/%s" % (service_id, version_number, name), method="DELETE")
-		return self._status(content)
-
-
-	def list_conditions(self, service_id, version_number):
-		content = self._fetch("/service/%s/version/%d/condition" % (service_id, version_number))
-		return map(lambda x: FastlyCondition(self, x), content)
-
-
-	def create_condition(self, service_id, version_number, name, _type, statement, priority="10", comment=None):
-		body = self._formdata({
-			"name": name,
-			"type": _type,
-			"statement": statement,
-			"priority": priority,
-			"comment": comment,
-		}, FastlyCondition.FIELDS)
-		content = self._fetch("/service/%s/version/%d/condition" % (service_id, version_number), method="POST", body=body)
-		return FastlyCondition(self, content)
-
-
-	def get_condition(self, service_id, version_number, name):
-		content = self._fetch("/service/%s/version/%d/condition/%s" % (service_id, version_number, name))
-		return FastlyCondition(self, content)
-
-
-	def update_condition(self, service_id, version_number, name_key, **kwargs):
-		body = self._formdata(kwargs, FastlyCondition.FIELDS)
-		content = self._fetch("/service/%s/version/%d/condition/%s" % (service_id, version_number, name_key), method="PUT", body=body)
-		return FastlyCondition(self, content)
-
-
-	def delete_condition(self, service_id, version_number, name):
-		content = self._fetch("/service/%s/version/%d/condition/%s" % (service_id, version_number, name), method="DELETE")
 		return self._status(content)
 
 
@@ -668,16 +752,6 @@ class FastlyConnection(object):
 	def delete_syslog(self, service_id, version_number, name):
 		content = self._fetch("/service/%s/version/%d/syslog/%s" % (service_id, version_number, name), method="DELETE")
 		return self._status(content)
-
-
-	def content_edge_check(self, url):
-		prefixes = ["http://", "https://"]
-		for prefix in prefixes:
-			if url.startswith(prefix):
-				url = url[len(prefix):]
-				break
-		content = self._fetch("/content/edge_check/%s" % url)
-		print content
 	
 
 	def _status(self, status):
@@ -839,29 +913,6 @@ class FastlyUser(FastlyObject, IDateStampedObject):
 		return self._conn.get_customer(self.customer_id)
 
 
-class FastlyCustomer(FastlyObject, IDateStampedObject):
-	FIELDS = [
-		"can_configure_wordpress",
-		"can_edit_matches",
-		"name",
-		"created_at",
-		"updated_at",
-		"can_stream_syslog",
-		"id",
-		"pricing_plan",
-		"can_upload_vcl",
-		"has_config_panel",
-		"raw_api_key",
-		"has_billing_panel",
-		"can_reset_passwords",
-		"owner_id",
-	]
-
-	@property
-	def owner(self):
-		return self._conn.get_user(self.owner_id)
-
-
 class FastlyService(FastlyObject):
 	FIELDS = [
 		"comment",
@@ -957,29 +1008,105 @@ class FastlyServiceVersionSettings(FastlyObject, IServiceVersionObject):
 
 class FastlyBackend(FastlyObject, IServiceVersionObject):
 	FIELDS = [
-		"name",
-		"comment",
 		"service_id",
 		"version",
+		"name",
 		"address",
-		"ipv4",
-		"ipv6",
-		"hostname",
-		"healthcheck",
 		"port",
-		"between_bytes_timeout",
-		"connect_timeout",
-		"error_threshold",
-		"first_byte_timeout",
-		"max_conn",
 		"use_ssl",
+		"connect_timeout",
+		"first_byte_timeout",
+		"between_bytes_timeout",
+		"error_threshold",
+		"max_conn",
 		"weight",
-		"client_cert",
+		"auto_loadbalance",
+		"request_condition",
+		"healthcheck",
+		"comment",
 	]
 
 	@property
 	def healthcheck(self):
 		return self._conn.get_healthcheck(self.service_id, self.version, self.healthcheck)
+
+
+class FastlyCacheSetting(FastlyObject, IServiceVersionObject):
+	FIELDS = [
+		"service_id",
+		"version",
+		"name",
+		"action",
+		"ttl",
+		"stale_ttl",
+		"cache_condition",
+	]
+
+	@property
+	def healthcheck(self):
+		return self._conn.get_healthcheck(self.service_id, self.version, self.healthcheck)
+
+
+class FastlyCondition(FastlyObject, IServiceVersionObject):
+	FIELDS = [
+		"name",
+		"service_id",
+		"version",
+		"type",
+		"statement",
+		"priority",
+	]
+
+
+class FastlyCustomer(FastlyObject, IDateStampedObject):
+	FIELDS = [
+		"can_configure_wordpress",
+		"can_edit_matches",
+		"name",
+		"created_at",
+		"updated_at",
+		"can_stream_syslog",
+		"id",
+		"pricing_plan",
+		"can_upload_vcl",
+		"has_config_panel",
+		"raw_api_key",
+		"has_billing_panel",
+		"can_reset_passwords",
+		"owner_id",
+	]
+
+	@property
+	def owner(self):
+		return self._conn.get_user(self.owner_id)
+
+
+class FastlyDirector(FastlyObject, IServiceVersionObject, IDateStampedObject):
+	FIELDS = [
+		"name",
+		"service_id",
+		"version"
+		"quorum",
+		"type",
+		"retries",
+		"created",
+		"updated",
+		"deleted",
+		"capacity",
+		"comment",
+	]
+
+
+class FastlyDirectorBackend(FastlyObject, IServiceVersionObject, IDateStampedObject):
+	FIELDS = [
+		"service_id",
+		"version",
+		"director",
+		"backend",
+		"created",
+		"updated",
+		"deleted",
+	]
 
 
 class FastlyHealthCheck(FastlyObject, IServiceVersionObject):
@@ -1020,22 +1147,6 @@ class FastlyDomainCheck(FastlyObject):
 	@property
 	def success(self):
 		return self._data[2]
-
-
-class FastlyDirector(FastlyObject, IServiceVersionObject, IDateStampedObject):
-	FIELDS = [
-		"name",
-		"service_id",
-		"version"
-		"quorum",
-		"type",
-		"retries",
-		"created",
-		"updated",
-		"deleted",
-		"capacity",
-		"comment",
-	]
 
 
 class FastlyOrigin(FastlyObject, IServiceVersionObject):
@@ -1104,17 +1215,6 @@ class FastlyHeader(FastlyObject, IServiceVersionObject):
 		"response_condition",
 		"request_condition",
 		"cache_condition",
-	]
-
-
-class FastlyCondition(FastlyObject, IServiceVersionObject):
-	FIELDS = [
-		"name",
-		"service_id",
-		"version",
-		"type",
-		"statement",
-		"priority",
 	]
 
 
