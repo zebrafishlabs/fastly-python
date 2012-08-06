@@ -852,7 +852,7 @@ class FastlyConnection(object):
 			"vcl": content,
 			"comment": comment,
 
-		}, FastlyOrigin.FIELDS)
+		}, FastlyVCL.FIELDS)
 		content = self._fetch("/service/%s/version/%d/vcl" % (service_id, version_number), method="POST", body=body)
 		return FastlyVCL(self, content)
 
