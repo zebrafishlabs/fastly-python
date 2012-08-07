@@ -72,7 +72,7 @@ class FastlyHeaderType(object):
 	REQUEST="request"
 
 
-class FastlyRequestSettingsAction(object):
+class FastlyRequestSettingAction(object):
 	LOOKUP="lookup"
 	PASS="pass"
 
@@ -558,10 +558,10 @@ class FastlyConnection(object):
 	def list_request_settings(self, service_id, version_number):
 		"""Returns a list of all Request Settings objects for the given service and version."""
 		content = self._fetch("/service/%s/version/%d/request_settings" % (service_id, version_number))
-		return map(lambda x: FastlyRequestSettings(self, x), content)
+		return map(lambda x: FastlyRequestSetting(self, x), content)
 
 
-	def create_request_settings(self,
+	def create_request_setting(self,
 		service_id,
 		version_number,
 		name,
@@ -590,25 +590,25 @@ class FastlyConnection(object):
 			"timer_support": timer_support,
 			"geo_headers": geo_headers,
 			"request_condition": request_condition,
-		}, FastlyRequestSettings.FIELDS)
+		}, FastlyRequestSetting.FIELDS)
 		content = self._fetch("/service/%s/version/%d/request_settings" % (service_id, version_number), method="POST", body=body)
-		return FastlyRequestSettings(self, content)
+		return FastlyRequestSetting(self, content)
 
 
-	def get_request_settings(self, service_id, version_number, name):
+	def get_request_setting(self, service_id, version_number, name):
 		"""Gets the specified Request Settings object."""
 		content = self._fetch("/service/%s/version/%d/request_settings/%s" % (service_id, version_number, name))
-		return FastlyHealthCheck(self, content)
+		return FastlyRequestSetting(self, content)
 
 
-	def update_request_settings(self, service_id, version_number, name_key, **kwargs):
+	def update_request_setting(self, service_id, version_number, name_key, **kwargs):
 		"""Updates the specified Request Settings object."""
 		body = self._formdata(kwargs, FastlyHealthCheck.FIELDS)
 		content = self._fetch("/service/%s/version/%d/request_settings/%s" % (service_id, version_number, name_key), method="PUT", body=body)
-		return FastlyHealthCheck(self, content)
+		return FastlyRequestSetting(self, content)
 
 
-	def delete_request_settings(self, service_id, version_number, name):
+	def delete_request_setting(self, service_id, version_number, name):
 		"""Removes the specfied Request Settings object."""
 		content = self._fetch("/service/%s/version/%d/request_settings/%s" % (service_id, version_number, name), method="DELETE")
 		return self._status(content)
@@ -845,13 +845,13 @@ class FastlyConnection(object):
 		return map(lambda x: FastlyVCL(self, x), content)
 
 
-	def upload_vcl(self, service_id, version_number, name, content, comment=None):
+	def upload_vcl(self, service_id, version_number, name, content, main=None, comment=None):
 		"""Upload a VCL for a particular service and version."""
 		body = self._formdata({
 			"name": name,
-			"vcl": content,
+			"content": content,
 			"comment": comment,
-
+			"main": main,
 		}, FastlyVCL.FIELDS)
 		content = self._fetch("/service/%s/version/%d/vcl" % (service_id, version_number), method="POST", body=body)
 		return FastlyVCL(self, content)
@@ -1363,7 +1363,7 @@ class FastlyPurgeStatus(FastlyObject):
 	]
 
 
-class FastlyRequestSettings(FastlyObject, IServiceVersionObject):
+class FastlyRequestSetting(FastlyObject, IServiceVersionObject):
 	"""Settings used to customize Fastly's request handling. When used with Conditions the Request Settings object allows you to fine tune how specific types of requests are handled."""
 	FIELDS = [
 		"service_id",
