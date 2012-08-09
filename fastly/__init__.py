@@ -1058,7 +1058,7 @@ class FastlyConnection(object):
 			try:
 				payload = json.loads(content)
 			except ValueError: # Could not decode, usually HTML
-				payload = None
+				payload = content
 
 		if status == 200:
 			# Keep track of the session. Only really set during /login
@@ -1071,6 +1071,8 @@ class FastlyConnection(object):
 
 		if payload is None:
 			raise Exception("HTTP Error %d occurred." % status)
+		elif isinstance(payload, basestring):
+			raise Exception("HTTP Error %d occurred. { %s }" % (status, payload))
 		else:
 			payload["status"] = "error"
 			status = FastlyStatus(self, payload)
