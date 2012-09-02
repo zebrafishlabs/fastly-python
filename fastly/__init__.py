@@ -92,6 +92,13 @@ class FastlyStatsType(object):
 	MINUTELY="minutely"
 
 
+class FastlyDirectorType(object):
+	RANDOM=1
+	ROUNDROBIN=2
+	HASH=3
+	CLIENT=4
+
+
 class FastlyConnection(object):
 	def __init__(self, api_key):
 		self._session = None
@@ -134,6 +141,7 @@ class FastlyConnection(object):
 		max_conn=20,
 		weight=100,
 		auto_loadbalance=False,
+		shield=None,
 		request_condition=None,
 		healthcheck=None,
 		comment=None):
@@ -150,6 +158,7 @@ class FastlyConnection(object):
 			"max_conn": max_conn,
 			"weight": weight,
 			"auto_loadbalance": auto_loadbalance,
+			"shield": shield,
 			"request_condition": request_condition,
 			"healthcheck": healthcheck,
 			"comment": comment,
@@ -331,12 +340,11 @@ class FastlyConnection(object):
 	def create_director(self, service_id, version_number, 
 		name, 
 		quorum=75,
-		_type=1,
+		_type=FastlyDirectorType.RANDOM,
 		retries=5):
 		"""Create a director for a particular service and version."""
 		body = self._formdata({
 			"name": name,
-			"comment": comment,
 			"quorum": quorum,
 			"type": _type,
 			"retries": retries,
@@ -906,10 +914,11 @@ class FastlyConnection(object):
 		return self._status(content)
 
 
-	def create_version(self, service_id, comment=None):
+	def create_version(self, service_id, inherit_service_id=None, comment=None):
 		"""Create a version for a particular service."""
 		body = self._formdata({
 			"service_id": service_id,
+			"inherit_service_id": inherit_service_id,
 			"comment": comment,
 		}, FastlyVersion.FIELDS)
 		content = self._fetch("/service/%s/version" % service_id, method="POST", body=body)
@@ -1180,6 +1189,7 @@ class FastlyBackend(FastlyObject, IServiceVersionObject):
 		"max_conn",
 		"weight",
 		"auto_loadbalance",
+		"shield",
 		"request_condition",
 		"healthcheck",
 		"comment",
@@ -1246,7 +1256,7 @@ class FastlyDirector(FastlyObject, IServiceVersionObject, IDateStampedObject):
 	FIELDS = [
 		"name",
 		"service_id",
-		"version"
+		"version",
 		"quorum",
 		"type",
 		"retries",
@@ -1489,6 +1499,7 @@ class FastlyVersion(FastlyObject, IServiceObject, IDateStampedObject):
 		"service_id",
 		"deleted_at",
 		"deployed",
+		"inherit_service_id",
 	]
 
 	@property
