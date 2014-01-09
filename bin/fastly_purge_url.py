@@ -37,7 +37,7 @@ def main():
     """
 
     parser = OptionParser(description=
-             "Purge a single url from fastly.  All options are required."
+             "Purge a single url from fastly.  All options are required.")
     parser.add_option("-k", "--key", dest="apikey", help="fastly api key")
     parser.add_option("-H", "--host", dest="host",
                       help="host to purge from")
