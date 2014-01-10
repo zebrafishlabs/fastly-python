@@ -37,8 +37,9 @@ def main():
     """
 
     parser = OptionParser(description=
-             "Purge a single url from fastly.  All options are required.")
-    parser.add_option("-k", "--key", dest="apikey", help="fastly api key")
+             "Purge a single url from fastly.")
+    parser.add_option("-k", "--key", dest="apikey",
+                      default="", help="fastly api key")
     parser.add_option("-H", "--host", dest="host",
                       help="host to purge from")
     parser.add_option("-p", "--path", dest="path",
@@ -47,7 +48,7 @@ def main():
     (options, args) = parser.parse_args()
     for val in options.__dict__.values():
         if val is None:
-            print "Missing required options:"
+            print "Missing required options"
             parser.print_help()
             sys.exit(1)
 
