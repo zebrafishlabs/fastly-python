@@ -14,6 +14,7 @@ setup(
 	keywords = "fastly",
 	url = "https://github.com/zebrafishlabs/fastly-python",
 	packages=['fastly', 'tests'],
+	scripts=['bin/fastly_upload_vcl.py', 'bin/fastly_purge_url.py'],
 	long_description=read('README'),
 	classifiers=[
 		"Development Status :: 3 - Alpha",
