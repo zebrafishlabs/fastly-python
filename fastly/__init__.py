@@ -761,6 +761,9 @@ class FastlyConnection(object):
 		name,
 		address,
 		port=514,
+		use_tls=False,
+		tls_ca_cert=None,
+		token=None,
 		_format=None,
 		response_condition=None):
 		"""Create a Syslog for a particular service and version."""
@@ -768,6 +771,9 @@ class FastlyConnection(object):
 			"name": name,
 			"address": address,
 			"port": port,
+			"use_tls": "1" if use_tls else "0",
+			"tls_ca_cert": tls_ca_cert,
+			"token": token,
 			"format": _format,
 			"response_condition": response_condition,
 		}, FastlySyslog.FIELDS)
