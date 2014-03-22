@@ -6,7 +6,7 @@ def read(fname):
 
 setup(
 	name = "fastly-python",
-	version = "1.0.2",
+	version = "1.0.4",
 	author = "Chris Zacharias",
 	author_email = "chris@imgix.com",
 	description = ("A Python client libary for the Fastly API."),
