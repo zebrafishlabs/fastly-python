@@ -1,6 +1,8 @@
-# A Python client library for Fastly (http://www.fastly.com).
+## A Python client library for Fastly 
 
-## Example:
+www.fastly.com
+
+### Example:
 ```
 import fastly
 
