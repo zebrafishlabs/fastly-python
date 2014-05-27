@@ -1,7 +1,9 @@
-A Python client library for Fastly (http://www.fastly.com).
+## A Python client library for Fastly 
 
-Example:
+www.fastly.com
 
+### Example:
+```
 import fastly
 
 # Connects to Fastly using API key.
@@ -39,4 +41,5 @@ print client.list_domains(service.id, service_version.number)
 
 # Delete the domain we just created.
 client.delete_domain(service.id, service_version.number, domain.name)
+```
 
