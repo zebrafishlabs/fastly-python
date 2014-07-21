@@ -1051,9 +1051,9 @@ class FastlyConnection(object):
 		hdrs = {}
 		hdrs.update(headers)
 		
-		print "Fetch: %s %s" % (method, url)
+		print("Fetch: %s %s" % (method, url))
 		if body:
-			print "Body: %s" % body
+			print("Body: %s" % body)
 		if self._fully_authed:
 			hdrs["Cookie"] = self._session
 		else:
