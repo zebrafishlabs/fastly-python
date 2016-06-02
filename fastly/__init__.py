@@ -1063,7 +1063,7 @@ class FastlyConnection(object):
 		if not hdrs.has_key("Content-Type") and method in ["POST", "PUT"]:
 			hdrs["Content-Type"] = "application/x-www-form-urlencoded"
 
-		conn = httplib2.Http(disable_ssl_certificate_validation=True)
+		conn = httplib2.Http(disable_ssl_certificate_validation=False, timeout=10)
 		endpoint = "%s://%s%s" % (FASTLY_SCHEME, FASTLY_HOST, url)
 		return self._check(*conn.request(endpoint, method, body=body, headers=hdrs))
 
