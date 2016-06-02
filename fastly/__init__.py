@@ -1136,7 +1136,7 @@ class FastlyBackend(FastlyObject, IServiceVersionObject):
 
 	@property
 	def healthcheck(self):
-		return self._conn.get_healthcheck(self.service_id, self.version, self.healthcheck)
+		return self._conn.get_healthcheck(self.service_id, self.version, self.__getattr__("healthcheck"))
 
 
 class FastlyCacheSettings(FastlyObject, IServiceVersionObject):
