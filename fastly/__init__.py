@@ -1347,6 +1347,15 @@ class FastlyHeader(FastlyObject, IServiceVersionObject):
 		"cache_condition",
 	]
 
+	@property
+	def destination(self):
+		return self.dst
+
+	@property
+	def source(self):
+		return self.src
+
+
 
 class FastlyHealthCheck(FastlyObject, IServiceVersionObject):
 	"""Healthchecks are used to customize the way Fastly checks on your Backends. Only Backends that have successful Healthchecks will be sent traffic, thus assuring that the failure of one server does not affect visitors."""
