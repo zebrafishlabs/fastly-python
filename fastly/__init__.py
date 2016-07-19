@@ -1057,7 +1057,7 @@ class FastlyConnection(object):
 		if self._fully_authed:
 			hdrs["Cookie"] = self._session
 		else:
-			hdrs["X-Fastly-Key"] = self._api_key
+			hdrs["Fastly-Key"] = self._api_key
 
 		hdrs["Content-Accept"] = "application/json"
 		if not hdrs.has_key("Content-Type") and method in ["POST", "PUT"]:
