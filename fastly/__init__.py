@@ -451,6 +451,43 @@ class FastlyConnection(object):
 		return FastlyEventLog(self, content)
 
 
+	def list_gzip(self, service_id, version_number):
+		"""List all gzip configurations for a particular service and version"""
+		content = self._fetch("/service/%s/version/%d/gzip" % (service_id, version_number))
+		return map(lambda x: FastlyGzip(self, x), content)
+
+
+	def create_gzip(self, service_id, version_number, name, cache_condition=None, content_types=None, extensions=None):
+		body = self._formdata({
+			"name": name,
+			"cache_condition": cache_condition,
+			"content_types": content_types,
+			"extensions": extensions
+		}, FastlyGzip.FIELDS)
+		"""Creates a new Gzip object."""
+		content = self._fetch("/service/%s/version/%d/gzip" % (service_id, version_number), method="POST", body=body)
+		return FastlyGzip(self, content)
+
+
+	def get_gzip(self, service_id, version_number, name):
+		"""Retrieves a Header object by name."""
+		content = self._fetch("/service/%s/version/%d/gzip/%s" % (service_id, version_number, name))
+		return FastlyGzip(self, content)
+
+
+	def update_gzip(self, service_id, version_number, name, **kwargs):
+		"""Modifies an existing Gzip object by name."""
+		body = self._formdata(kwargs, FastlyGzip.FIELDS)
+		content = self._fetch("/service/%s/version/%d/gzip/%s" % (service_id, version_number, name), method="PUT", body=body)
+		return FastlyHeader(self, content)
+
+
+	def delete_gzip(self, service_id, version_number, name):
+		"""Deletes a Gzip object by name."""
+		content = self._fetch("/service/%s/version/%d/gzip/%s" % (service_id, version_number, name), method="DELETE")
+		return self._status(content)
+
+
 	def list_headers(self, service_id, version_number):
 		"""Retrieves all Header objects for a particular Version of a Service."""
 		content = self._fetch("/service/%s/version/%d/header" % (service_id, version_number))
@@ -1325,6 +1362,18 @@ class FastlyEventLog(FastlyObject):
 		"timestamp",
 		"system",
 		"subsystem",
+	]
+
+
+class FastlyGzip(FastlyObject, IServiceVersionObject):
+	"""Gzip configuration allows you to choose resources to automatically compress."""
+	FIELDS = [
+		"cache_condition",
+		"content_types",
+		"extensions",
+		"name",
+		"service_id",
+		"version"
 	]
 
 
