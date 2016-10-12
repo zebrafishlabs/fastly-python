@@ -471,20 +471,20 @@ class FastlyConnection(object):
 
 	def get_gzip(self, service_id, version_number, name):
 		"""Retrieves a Header object by name."""
-		content = self._fetch("/service/%s/version/%d/gzip/%s" % (service_id, version_number, name))
+		content = self._fetch("/service/%s/version/%d/gzip/%s" % (service_id, version_number, urllib.quote(name)))
 		return FastlyGzip(self, content)
 
 
-	def update_gzip(self, service_id, version_number, name, **kwargs):
+	def update_gzip(self, service_id, version_number, name_key, **kwargs):
 		"""Modifies an existing Gzip object by name."""
 		body = self._formdata(kwargs, FastlyGzip.FIELDS)
-		content = self._fetch("/service/%s/version/%d/gzip/%s" % (service_id, version_number, name), method="PUT", body=body)
+		content = self._fetch("/service/%s/version/%d/gzip/%s" % (service_id, version_number, urllib.quote(name_key)), method="PUT", body=body)
 		return FastlyHeader(self, content)
 
 
 	def delete_gzip(self, service_id, version_number, name):
 		"""Deletes a Gzip object by name."""
-		content = self._fetch("/service/%s/version/%d/gzip/%s" % (service_id, version_number, name), method="DELETE")
+		content = self._fetch("/service/%s/version/%d/gzip/%s" % (service_id, version_number, urllib.quote(name)), method="DELETE")
 		return self._status(content)
 
 
