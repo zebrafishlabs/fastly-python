@@ -479,7 +479,7 @@ class FastlyConnection(object):
 		"""Modifies an existing Gzip object by name."""
 		body = self._formdata(kwargs, FastlyGzip.FIELDS)
 		content = self._fetch("/service/%s/version/%d/gzip/%s" % (service_id, version_number, urllib.quote(name_key)), method="PUT", body=body)
-		return FastlyHeader(self, content)
+		return FastlyGzip(self, content)
 
 
 	def delete_gzip(self, service_id, version_number, name):
