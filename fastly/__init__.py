@@ -1426,7 +1426,7 @@ class FastlyService(FastlyObject):
 		"customer_id",
 		"publish_key",
 		"active_version",
-		"versions"
+		"versions",
 		"comment",
 	]
 
