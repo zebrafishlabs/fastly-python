@@ -1206,6 +1206,7 @@ class FastlyDirector(FastlyObject, IServiceVersionObject, IDateStampedObject):
 		"deleted",
 		"capacity",
 		"comment",
+                "backends",
 	]
 
 
