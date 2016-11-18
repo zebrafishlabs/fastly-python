@@ -261,6 +261,8 @@ class FastlyConnection(object):
 
 	def update_condition(self, service_id, version_number, name_key, **kwargs):
 		"""Updates the specified condition."""
+                if '_type' in kwargs:
+                        kwargs['type'] = kwargs['_type']
 		body = self._formdata(kwargs, FastlyCondition.FIELDS)
 		content = self._fetch("/service/%s/version/%d/condition/%s" % (service_id, version_number, urllib.quote(name_key)), method="PUT", body=body)
 		return FastlyCondition(self, content)
@@ -344,6 +346,8 @@ class FastlyConnection(object):
 
 	def update_director(self, service_id, version_number, name_key, **kwargs):
 		"""Update the director for a particular service and version."""
+                if '_type' in kwargs:
+                        kwargs['type'] = kwargs['_type']
 		body = self._formdata(kwargs, FastlyDirector.FIELDS)
 		content = self._fetch("/service/%s/version/%d/director/%s" % (service_id, version_number, urllib.quote(name_key)), method="PUT", body=body)
 		return FastlyDirector(self, content)
@@ -482,6 +486,8 @@ class FastlyConnection(object):
 
 	def update_header(self, service_id, version_number, name_key, **kwargs):
 		"""Modifies an existing Header object by name."""
+                if '_type' in kwargs:
+                        kwargs['type'] = kwargs['_type']
 		body = self._formdata(kwargs, FastlyHeader.FIELDS)
 		content = self._fetch("/service/%s/version/%d/header/%s" % (service_id, version_number, urllib.quote(name_key)), method="PUT", body=body)
 		return FastlyHeader(self, content)
