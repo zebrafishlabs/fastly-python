@@ -144,7 +144,8 @@ class FastlyConnection(object):
 		shield=None,
 		request_condition=None,
 		healthcheck=None,
-		comment=None):
+		comment=None,
+		ssl_sni_hostname=None,):
 		"""Create a backend for a particular service and version."""
 		body = self._formdata({
 			"name": name,
@@ -162,6 +163,7 @@ class FastlyConnection(object):
 			"request_condition": request_condition,
 			"healthcheck": healthcheck,
 			"comment": comment,
+                        "ssl_sni_hostname": ssl_sni_hostname,
 		}, FastlyBackend.FIELDS)
 		content = self._fetch("/service/%s/version/%d/backend" % (service_id, version_number), method="POST", body=body)
 		return FastlyBackend(self, content)
@@ -1138,6 +1140,7 @@ class FastlyBackend(FastlyObject, IServiceVersionObject):
 		"request_condition",
 		"healthcheck",
 		"comment",
+                "ssl_sni_hostname",
 	]
 
 	@property
