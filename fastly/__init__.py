@@ -3,39 +3,40 @@
 # Author: Chris Zacharias (chris@imgix.com)
 # Copyright (c) 2012, Zebrafish Labs Inc.
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-# 
+#
 # 	Redistributions of source code must retain the above copyright notice,
 # 	this list of conditions and the following disclaimer.
-# 
+#
 # 	Redistributions in binary form must reproduce the above copyright notice,
-# 	this list of conditions and the following disclaimer in the documentation 
+# 	this list of conditions and the following disclaimer in the documentation
 # 	and/or other materials provided with the distribution.
-# 	
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE 
-# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
-# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
-# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
-# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
-# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
-# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import httplib2
-import urllib
-import re
-import json
 from datetime import datetime
+import httplib2
+import json
+import re
+import urllib
 
 FASTLY_SCHEME = "https"
 FASTLY_HOST = "api.fastly.com"
 
 FASTLY_SESSION_REGEX = re.compile("(fastly\.session=[^;]+);")
+
 
 class FastlyRoles(object):
 	USER = "user"
@@ -51,52 +52,52 @@ class FastlyCacheSettingsAction(object):
 
 
 class FastlyConditionType(object):
-	RESPONSE="response"
-	CACHE="cache"
-	REQUEST="request"
-	FETCH="fetch"
+	RESPONSE = "response"
+	CACHE = "cache"
+	REQUEST = "request"
+	FETCH = "fetch"
 
 
 class FastlyHeaderAction(object):
-	SET="set"
-	APPEND="append"
-	DELETE="delete"
-	REGEX="regex"
-	REGEX_ALL="regex_repeat"
+	SET = "set"
+	APPEND = "append"
+	DELETE = "delete"
+	REGEX = "regex"
+	REGEX_ALL = "regex_repeat"
 
 
 class FastlyHeaderType(object):
-	RESPONSE="response"
-	FETCH="fetch"
-	CACHE="cache"
-	REQUEST="request"
+	RESPONSE = "response"
+	FETCH = "fetch"
+	CACHE = "cache"
+	REQUEST = "request"
 
 
 class FastlyRequestSettingAction(object):
-	LOOKUP="lookup"
-	PASS="pass"
+	LOOKUP = "lookup"
+	PASS = "pass"
 
 
 class FastlyForwardedForAction(object):
-	CLEAR="clear"
-	LEAVE="leave"
-	APPEND="append"
-	APPEND_ALL="append_all"
-	OVERWRITE="overwrite"
+	CLEAR = "clear"
+	LEAVE = "leave"
+	APPEND = "append"
+	APPEND_ALL = "append_all"
+	OVERWRITE = "overwrite"
 
 
 class FastlyStatsType(object):
-	ALL="all"
-	DAILY="daily"
-	HOURLY="hourly"
-	MINUTELY="minutely"
+	ALL = "all"
+	DAILY = "daily"
+	HOURLY = "hourly"
+	MINUTELY = "minutely"
 
 
 class FastlyDirectorType(object):
-	RANDOM=1
-	ROUNDROBIN=2
-	HASH=3
-	CLIENT=4
+	RANDOM = 1
+	ROUNDROBIN = 2
+	HASH = 3
+	CLIENT = 4
 
 
 class FastlyConnection(object):
@@ -109,7 +110,6 @@ class FastlyConnection(object):
 	def fully_authed(self):
 		return self._fully_authed
 
-
 	def login(self, user, password):
 		body = self._formdata({
 			"user": user,
@@ -119,18 +119,15 @@ class FastlyConnection(object):
 		self._fully_authed = True
 		return FastlySession(self, content)
 
-
 	def list_backends(self, service_id, version_number):
 		"""List all backends for a particular service and version."""
-
 		content = self._fetch("/service/%s/version/%d/backend" % (service_id, version_number))
 		return map(lambda x: FastlyBackend(self, x), content)
 
-
-	def create_backend(self, 
+	def create_backend(self,
 		service_id,
-		version_number, 
-		name, 
+		version_number,
+		name,
 		address,
 		use_ssl=False,
 		port=80,
@@ -166,12 +163,10 @@ class FastlyConnection(object):
 		content = self._fetch("/service/%s/version/%d/backend" % (service_id, version_number), method="POST", body=body)
 		return FastlyBackend(self, content)
 
-
 	def get_backend(self, service_id, version_number, name):
 		"""Get the backend for a particular service and version."""
 		content = self._fetch("/service/%s/version/%d/backend/%s" % (service_id, version_number, urllib.quote(name)))
 		return FastlyBackend(self, content)
-
 
 	def update_backend(self, service_id, version_number, name_key, **kwargs):
 		"""Update the backend for a particular service and version."""
@@ -179,12 +174,10 @@ class FastlyConnection(object):
 		content = self._fetch("/service/%s/version/%d/backend/%s" % (service_id, version_number, urllib.quote(name_key)), method="PUT", body=body)
 		return FastlyBackend(self, content)
 
-
 	def delete_backend(self, service_id, version_number, name):
 		"""Delete the backend for a particular service and version."""
 		content = self._fetch("/service/%s/version/%d/backend/%s" % (service_id, version_number, urllib.quote(name)), method="DELETE")
 		return self._status(content)
-
 
 	def check_backends(self, service_id, version_number):
 		"""Performs a health check against each backend in version. If the backend has a specific type of healthcheck, that one is performed, otherwise a HEAD request to / is performed. The first item is the details on the Backend itself. The second item is details of the specific HTTP request performed as a health check. The third item is the response details."""
@@ -192,16 +185,14 @@ class FastlyConnection(object):
 		# TODO: Use a strong-typed class for output?
 		return content
 
-
 	def list_cache_settings(self, service_id, version_number):
 		"""Get a list of all cache settings for a particular service and version."""
 		content = self._fetch("/service/%s/version/%d/cache_settings" % (service_id, version_number))
 		return map(lambda x: FastlyCacheSettings(self, x), content)
 
-
-	def create_cache_settings(self, 
-		service_id, 
-		version_number, 
+	def create_cache_settings(self,
+		service_id,
+		version_number,
 		name,
 		action,
 		ttl=None,
@@ -218,12 +209,10 @@ class FastlyConnection(object):
 		content = self._fetch("/service/%s/version/%d/cache_settings" % (service_id, version_number), method="POST", body=body)
 		return FastlyCacheSettings(self, content)
 
-
 	def get_cache_settings(self, service_id, version_number, name):
 		"""Get a specific cache settings object."""
 		content = self._fetch("/service/%s/version/%d/cache_settings/%s" % (service_id, version_number, urllib.quote(name)))
 		return FastlyCacheSettings(self, content)
-
 
 	def update_cache_settings(self, service_id, version_number, name_key, **kwargs):
 		"""Update a specific cache settings object."""
@@ -231,18 +220,15 @@ class FastlyConnection(object):
 		content = self._fetch("/service/%s/version/%d/cache_settings/%s" % (service_id, version_number, urllib.quote(name_key)), method="PUT", body=body)
 		return FastlyCacheSettings(self, content)
 
-
 	def delete_cache_settings(self, service_id, version_number, name):
 		"""Delete a specific cache settings object."""
 		content = self._fetch("/service/%s/version/%d/cache_settings/%s" % (service_id, version_number, urllib.quote(name)), method="DELETE")
 		return self._status(content)
 
-
 	def list_conditions(self, service_id, version_number):
 		"""Gets all conditions for a particular service and version."""
 		content = self._fetch("/service/%s/version/%d/condition" % (service_id, version_number))
 		return map(lambda x: FastlyCondition(self, x), content)
-
 
 	def create_condition(self, 
 		service_id, 
@@ -263,19 +249,16 @@ class FastlyConnection(object):
 		content = self._fetch("/service/%s/version/%d/condition" % (service_id, version_number), method="POST", body=body)
 		return FastlyCondition(self, content)
 
-
 	def get_condition(self, service_id, version_number, name):
 		"""Gets a specified condition."""
 		content = self._fetch("/service/%s/version/%d/condition/%s" % (service_id, version_number, urllib.quote(name)))
 		return FastlyCondition(self, content)
-
 
 	def update_condition(self, service_id, version_number, name_key, **kwargs):
 		"""Updates the specified condition."""
 		body = self._formdata(kwargs, FastlyCondition.FIELDS)
 		content = self._fetch("/service/%s/version/%d/condition/%s" % (service_id, version_number, urllib.quote(name_key)), method="PUT", body=body)
 		return FastlyCondition(self, content)
-
 
 	def delete_condition(self, service_id, version_number, name):
 		"""Deletes the specified condition."""
@@ -1498,19 +1481,25 @@ class FastlySettings(FastlyObject, IServiceVersionObject):
 class FastlySyslog(FastlyObject, IServiceVersionObject, IDateStampedObject):
 	"""Fastly will stream log messages to the location, and in the format, specified in the Syslog object."""
 	FIELDS = [
-		"name",
-		"service_id",
-		"version",
 		"address",
-		"port",
-		"use_tls",
-		"tls_ca_cert",
-		"token",
+		"created_at",
+		"deleted_at",
 		"format",
+		"format_version",
+		"hostname",
+		"ipv4",
+		"message_type",
+		"name",
+		"placement",
+		"port",
 		"response_condition",
-		"created",
-		"updated",
-		"deleted",
+		"service_id",
+		"tls_ca_cert",
+		"tls_hostname",
+		"token",
+		"updated_at",
+		"use_tls",
+		"version",
 	]
 
 
@@ -1573,31 +1562,31 @@ class FastlyVersion(FastlyObject, IServiceObject, IDateStampedObject):
 
 	@property
 	def backends(self):
-		return dict([ (b.name, b) for b in self._conn.list_backends(self.service_id, int(self.number))])
+		return dict([(b.name, b) for b in self._conn.list_backends(self.service_id, int(self.number))])
 
 	@property
 	def healthchecks(self):
-		return dict([ (h.name, h) for h in self._conn.list_healthchecks(self.service_id, int(self.number))])
+		return dict([(h.name, h) for h in self._conn.list_healthchecks(self.service_id, int(self.number))])
 
 	@property
 	def domains(self):
-		return dict([ (d.name, d) for d in self._conn.list_domains(self.service_id, int(self.number))])
+		return dict([(d.name, d) for d in self._conn.list_domains(self.service_id, int(self.number))])
 
 	@property
 	def directors(self):
-		return dict([ (d.name, d) for d in self._conn.list_directors(self.service_id, int(self.number))])
+		return dict([(d.name, d) for d in self._conn.list_directors(self.service_id, int(self.number))])
 
 	@property
 	def origins(self):
-		return dict([ (o.name, o) for o in self._conn.list_origins(self.service_id, int(self.number))])
+		return dict([(o.name, o) for o in self._conn.list_origins(self.service_id, int(self.number))])
 
 	@property
 	def syslogs(self):
-		return dict([ (s.name, s) for s in self._conn.list_syslogs(self.service_id, int(self.number))])
+		return dict([(s.name, s) for s in self._conn.list_syslogs(self.service_id, int(self.number))])
 
 	@property
 	def vcls(self):
-		return dict([ (v.name, v) for v in self._conn.list_vcls(self.service_id, int(self.number))])
+		return dict([(v.name, v) for v in self._conn.list_vcls(self.service_id, int(self.number))])
 
 
 class FastlyWordpress(FastlyObject, IServiceVersionObject):
