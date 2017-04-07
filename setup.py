@@ -1,12 +1,13 @@
 import os
 from setuptools import setup
+exec(open('fastly/_version.py').read())
 
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 setup(
 	name = "fastly-python",
-	version = "1.0.4",
+	version = __version__,
 	author = "Chris Zacharias",
 	author_email = "chris@imgix.com",
 	description = ("A Python client libary for the Fastly API."),
