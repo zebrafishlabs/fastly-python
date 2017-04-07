@@ -1081,8 +1081,8 @@ class FastlyConnection(object):
 			hdrs["Fastly-Key"] = self._api_key
 
 		hdrs["Content-Accept"] = "application/json"
-		hdrs["User-Agent"] = ("fastly-python-v%s" % __version__)
-		if not hdrs.has_key("Content-Type") and method in ["POST", "PUT"]:
+		hdrs["User-Agent"] = "fastly-python-v%s" % __version__
+		if "Content-Type" not in hdrs and method in ["POST", "PUT"]:
 			hdrs["Content-Type"] = "application/x-www-form-urlencoded"
 
 		conn = httplib2.Http(disable_ssl_certificate_validation=False, timeout=10)
@@ -1101,7 +1101,7 @@ class FastlyConnection(object):
 
 		if status == 200:
 			# Keep track of the session. Only really set during /login
-			if resp.has_key("set-cookie"):
+			if "set-cookie" in resp:
 				set_cookie = resp["set-cookie"]
 				match = FASTLY_SESSION_REGEX.search(set_cookie)
 				if match is not None:
