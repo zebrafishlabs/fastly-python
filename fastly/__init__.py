@@ -27,6 +27,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 from datetime import datetime
+from _version import __version__
 import httplib2
 import json
 import re
@@ -1080,6 +1081,7 @@ class FastlyConnection(object):
 			hdrs["Fastly-Key"] = self._api_key
 
 		hdrs["Content-Accept"] = "application/json"
+		hdrs["User-Agent"] = ("fastly-python-v%s" % __version__)
 		if not hdrs.has_key("Content-Type") and method in ["POST", "PUT"]:
 			hdrs["Content-Type"] = "application/x-www-form-urlencoded"
 
