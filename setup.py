@@ -1,19 +1,21 @@
-import os
 from setuptools import setup
-exec(open('fastly/_version.py').read())
+import os
+
+from fastly.version import __version__
+
 
 def read(fname):
-    return open(os.path.join(os.path.dirname(__file__), fname)).read()
+	return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 setup(
-	name = "fastly-python",
-	version = __version__,
-	author = "Chris Zacharias",
-	author_email = "chris@imgix.com",
-	description = ("A Python client libary for the Fastly API."),
-	license = "BSD",
-	keywords = "fastly",
-	url = "https://github.com/zebrafishlabs/fastly-python",
+	name="fastly-python",
+	version=__version__,
+	author="Chris Zacharias",
+	author_email="chris@imgix.com",
+	description=("A Python client libary for the Fastly API."),
+	license="BSD",
+	keywords="fastly",
+	url="https://github.com/zebrafishlabs/fastly-python",
 	packages=['fastly', 'tests'],
 	install_requires=[
 		'httplib2',
