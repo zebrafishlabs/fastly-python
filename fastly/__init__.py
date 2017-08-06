@@ -1148,7 +1148,7 @@ class FastlyBackend(FastlyObject, IServiceVersionObject):
 
 	@property
 	def healthcheck(self):
-                if self.__getattr__('healthcheck') is None:
+                if self.__getattr__('healthcheck') is None or self.__getattr__('healthcheck') == '':
                         return None
 		return self._conn.get_healthcheck(self.service_id, self.version, self.__getattr__("healthcheck"))
 
