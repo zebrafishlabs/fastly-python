@@ -1,9 +1,6 @@
 from setuptools import setup
 import os
 
-from fastly.version import __version__
-
-
 def read(fname):
 	return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
